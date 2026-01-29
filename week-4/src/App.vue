@@ -378,6 +378,128 @@ watch: {
         </div>
       </div>
     </section>
+
+    <!-- Example 5: Complete Shopping Cart -->
+    <section v-if="currentExample === 4" class="example-section">
+      <h2>{{ examples[4].name }}</h2>
+
+      <div class="example-item">
+        <h3>
+          Complete Example: Shopping Cart with data, methods, computed, and
+          watch
+        </h3>
+
+        <div class="code-output-pair">
+          <div class="code-section">
+            <h4>Script Code (data):</h4>
+            <pre v-pre><code class="language-javascript">data() {
+  return {
+    items: [
+      { id: 1, name: 'Laptop', price: 999 },
+      { id: 2, name: 'Mouse', price: 25 },
+      { id: 3, name: 'Keyboard', price: 75 }
+    ],
+    cart: []
+  }
+}</code></pre>
+
+            <h4>Script Code (methods):</h4>
+            <pre v-pre><code class="language-javascript">methods: {
+  addToCart(item) {
+    this.cart.push(item)
+  },
+  clearCart() {
+    this.cart = []
+  }
+}</code></pre>
+
+            <h4>Script Code (computed):</h4>
+            <pre v-pre><code class="language-javascript">computed: {
+  cartTotal() {
+    return this.cart.reduce((total, item) => {
+      return total + item.price
+    }, 0)
+  },
+  cartItemCount() {
+    return this.cart.length
+  }
+}</code></pre>
+
+            <h4>Script Code (watch):</h4>
+            <pre v-pre><code class="language-javascript">watch: {
+  cartTotal(newTotal) {
+    if (newTotal > 1000) {
+      alert('You qualify for free shipping!')
+    }
+  }
+}</code></pre>
+
+            <h4>Template Code:</h4>
+            <pre
+              v-pre
+            ><code class="language-markup">&lt;h1&gt;Shopping Cart&lt;/h1&gt;
+
+&lt;div v-for="item in items" :key="item.id"&gt;
+  &lt;p&gt;{{ item.name }}: ${{ item.price }}&lt;/p&gt;
+  &lt;button @click="addToCart(item)"&gt;Add&lt;/button&gt;
+&lt;/div&gt;
+
+&lt;h2&gt;Cart Total: ${{ cartTotal }}&lt;/h2&gt;
+&lt;p&gt;Items: {{ cartItemCount }}&lt;/p&gt;
+&lt;button @click="clearCart"&gt;Clear Cart&lt;/button&gt;</code></pre>
+          </div>
+
+          <div class="output-section">
+            <h4>Output:</h4>
+            <div class="output-box">
+              <h3>🛒 Shopping Cart</h3>
+
+              <div class="products-grid">
+                <div
+                  v-for="item in shopItems"
+                  :key="item.id"
+                  class="product-card"
+                >
+                  <p>
+                    <strong>{{ item.name }}</strong>
+                  </p>
+                  <p class="price">${{ item.price }}</p>
+                  <button @click="addToShopCart(item)">Add to Cart</button>
+                </div>
+              </div>
+
+              <div class="cart-summary">
+                <h4>Cart Summary</h4>
+                <p>
+                  Items in cart: <strong>{{ shopCartItemCount }}</strong>
+                </p>
+                <p class="total">
+                  Total: <strong>${{ shopCartTotal }}</strong>
+                </p>
+                <p v-if="shopCartTotal > 1000" class="free-shipping">
+                  🎉 Free shipping!
+                </p>
+                <button
+                  @click="clearShopCart"
+                  :disabled="shopCart.length === 0"
+                >
+                  Clear Cart
+                </button>
+              </div>
+
+              <div v-if="shopCart.length > 0" class="cart-items">
+                <h4>Cart Items:</h4>
+                <ul>
+                  <li v-for="(item, index) in shopCart" :key="index">
+                    {{ item.name }} - ${{ item.price }}
+                  </li>
+                </ul>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
   </div>
 </template>
 
@@ -393,6 +515,7 @@ export default {
         { name: "methods Option" },
         { name: "computed Properties" },
         { name: "watch Option" },
+        { name: "Shopping Cart" },
       ],
 
       // Example 1: data()
@@ -428,6 +551,15 @@ export default {
       searchTerm: "",
       results: [],
       loading: false,
+
+      // Example 5: Shopping Cart
+      shopItems: [
+        { id: 1, name: "Laptop", price: 999 },
+        { id: 2, name: "Mouse", price: 25 },
+        { id: 3, name: "Keyboard", price: 75 },
+      ],
+      shopCart: [],
+      freeShippingNotified: false,
     };
   },
   computed: {
@@ -449,6 +581,15 @@ export default {
           .includes(this.searchQuery.toLowerCase());
       });
     },
+    // Shopping Cart computed
+    shopCartTotal() {
+      return this.shopCart.reduce((total, item) => {
+        return total + item.price;
+      }, 0);
+    },
+    shopCartItemCount() {
+      return this.shopCart.length;
+    },
   },
   methods: {
     // Counter methods
@@ -463,6 +604,14 @@ export default {
     },
     addAmount(amount) {
       this.methodsCount += amount;
+    },
+    // Shopping Cart methods
+    addToShopCart(item) {
+      this.shopCart.push({ ...item });
+    },
+    clearShopCart() {
+      this.shopCart = [];
+      this.freeShippingNotified = false;
     },
   },
   watch: {
@@ -491,6 +640,13 @@ export default {
         this.results = [`Result for: ${newValue}`];
         this.loading = false;
       }, 1000);
+    },
+    // Shopping Cart watcher
+    shopCartTotal(newTotal) {
+      if (newTotal > 1000 && !this.freeShippingNotified) {
+        this.freeShippingNotified = true;
+        console.log("You qualify for free shipping!");
+      }
     },
   },
 };
@@ -743,6 +899,58 @@ ul {
 
 li {
   margin: 5px 0;
+}
+
+/* Shopping Cart Styles */
+.products-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 15px;
+  margin-bottom: 20px;
+}
+
+.product-card {
+  background: #f9f9f9;
+  padding: 15px;
+  border-radius: 8px;
+  text-align: center;
+  border: 1px solid #e0e0e0;
+}
+
+.product-card .price {
+  color: #42b983;
+  font-size: 18px;
+  font-weight: bold;
+}
+
+.cart-summary {
+  background: #e8f5e9;
+  padding: 20px;
+  border-radius: 8px;
+  margin-bottom: 20px;
+}
+
+.cart-summary .total {
+  font-size: 20px;
+  color: #2c3e50;
+}
+
+.free-shipping {
+  color: #42b983;
+  font-weight: bold;
+  font-size: 16px;
+}
+
+.cart-items {
+  background: #fff;
+  padding: 15px;
+  border: 1px solid #ddd;
+  border-radius: 8px;
+}
+
+button:disabled {
+  background-color: #ccc;
+  cursor: not-allowed;
 }
 
 /* Responsive */
