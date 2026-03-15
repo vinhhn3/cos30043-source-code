@@ -6,20 +6,17 @@
 
 <script>
 import router from "../router/index";
+
 export default {
   name: "ProfileView",
-  data() {
-    return {
-      username: localStorage.getItem("username") || "Not logged in",
-    };
+  computed: {
+    username() {
+      return this.$store.getters["auth/username"] || "Not logged in";
+    },
   },
-
   methods: {
     handleLogout() {
-      localStorage.removeItem("isAuthenticated");
-      localStorage.removeItem("username");
-      localStorage.removeItem("isAdmin");
-      this.username = "Not logged in";
+      this.$store.dispatch("auth/logout");
       router.push("/");
     },
   },

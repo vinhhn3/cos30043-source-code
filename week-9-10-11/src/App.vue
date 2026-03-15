@@ -26,18 +26,17 @@ import { RouterLink } from "vue-router";
 
 export default {
   name: "App",
-  data() {
-    return {
-      isAuthenticated: localStorage.getItem("isAuthenticated") === "true",
-      isAdmin: localStorage.getItem("isAdmin") === "true",
-    };
-  },
-  methods: {},
-  watch: {
-    // Watch for changes in localStorage to update authentication state
-    isAuthenticated(newValue) {
-      this.isAuthenticated = newValue === "true";
+  computed: {
+    isAuthenticated() {
+      return this.$store.getters["auth/isAuthenticated"];
     },
+    isAdmin() {
+      return this.$store.getters["auth/isAdmin"];
+    },
+  },
+  mounted() {
+    // Initialize auth state from localStorage on app load
+    this.$store.dispatch("auth/initializeAuth");
   },
 };
 </script>

@@ -15,48 +15,33 @@
 </template>
 
 <script>
-import { loginUser } from "../api/authApi";
 import router from "../router/index";
+
 export default {
   data() {
     return {
       username: "",
       password: "",
-      loading: false,
     };
+  },
+  computed: {
+    loading() {
+      return this.$store.getters["auth/isLoading"];
+    },
   },
   methods: {
     async handleLogin() {
-      this.loading = true;
-      // Implement your login logic here
-      console.log({
-        username: this.username,
-        password: this.password,
-      });
-      // You can also make an API call to authenticate the user
       try {
-        const response = await loginUser(this.username, this.password);
-        console.log(response);
-        if (response.status !== 201) {
-          alert("Login failed. Please check your credentials and try again.");
-          throw new Error("Login failed");
-        }
+        await this.$store.dispatch("auth/login", {
+          username: this.username,
+          password: this.password,
+        });
 
         alert("Login successful!");
-        this.loading = false;
-
-        // Set authentication state (this is just a simple example, you should use a more secure method in a real application)
-        localStorage.setItem("isAuthenticated", "true");
-        localStorage.setItem("username", this.username);
-        localStorage.setItem(
-          "isAdmin",
-          this.username === "kevinryan" ? "true" : "false",
-        );
         router.push("/profile");
       } catch (error) {
         console.error("Login failed:", error);
         alert("Login failed. Please check your credentials and try again.");
-        this.loading = false;
       }
     },
   },

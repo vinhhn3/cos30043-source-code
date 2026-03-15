@@ -79,11 +79,6 @@
 
 <script>
 import Paginate from "vuejs-paginate-next";
-import {
-  createProduct,
-  deleteProduct,
-  getAllProducts,
-} from "../api/productApi";
 import AddProductModal from "../components/AddProductModal.vue";
 
 export default {
@@ -93,43 +88,37 @@ export default {
   },
   data() {
     return {
-      products: [],
-      loading: false,
-      currentPage: 1,
-      itemsPerPage: 5,
       showAddModal: false,
     };
   },
   computed: {
+    // Get data from Vuex store
+    products() {
+      return this.$store.getters["products/allProducts"];
+    },
+    loading() {
+      return this.$store.getters["products/isLoading"];
+    },
     pageCount() {
-      return Math.ceil(this.products.length / this.itemsPerPage);
+      return this.$store.getters["products/pageCount"];
     },
     paginatedProducts() {
-      const start = (this.currentPage - 1) * this.itemsPerPage;
-      const end = start + this.itemsPerPage;
-      return this.products.slice(start, end);
+      return this.$store.getters["products/paginatedProducts"];
+    },
+    currentPage() {
+      return this.$store.getters["products/getCurrentPage"];
     },
   },
   methods: {
     async fetchProducts() {
-      this.loading = true;
       try {
-        const response = await getAllProducts();
-        if (response.status !== 200) {
-          alert("Failed to fetch products. Please try again.");
-          throw new Error("Failed to fetch products");
-        }
-
-        this.products = response.data;
-        console.log("Products:", response.data);
+        await this.$store.dispatch("products/fetchProducts");
       } catch (error) {
-        console.error("Error fetching products:", error);
-      } finally {
-        this.loading = false;
+        alert("Failed to fetch products. Please try again.");
       }
     },
     handlePageChange(pageNum) {
-      this.currentPage = pageNum;
+      this.$store.dispatch("products/changePage", pageNum);
     },
     async addProduct() {
       this.showAddModal = true;
@@ -138,16 +127,13 @@ export default {
       this.showAddModal = false;
     },
     async handleAddProduct(productData) {
-      console.log("Adding product:", productData);
-      const response = await createProduct(productData);
-      console.log("Create response:", response);
-      if (response.status !== 201) {
+      try {
+        await this.$store.dispatch("products/addProduct", productData);
+        this.showAddModal = false;
+        alert("Product added successfully!");
+      } catch (error) {
         alert("Failed to add product. Please try again.");
-        throw new Error("Failed to add product");
       }
-      const newProduct = response.data;
-      this.products.push(newProduct);
-      this.showAddModal = false;
     },
     async editProduct(product) {
       // Implementation for editing a product
@@ -165,22 +151,17 @@ export default {
       // Implementation for deleting a product
       if (confirm("Are you sure you want to delete this product?")) {
         try {
-          const response = await deleteProduct(productId);
-          console.log("Delete response:", response);
-          if (response.status !== 200) {
-            alert("Failed to delete product. Please try again.");
-            throw new Error(`Failed to delete product with ID ${productId}`);
-          }
-          // Remove the deleted product from the products array
-          this.products = this.products.filter(
-            (product) => product.id !== productId,
-          );
+          await this.$store.dispatch("products/removeProduct", productId);
+          alert("Product deleted successfully!");
         } catch (error) {
-          console.error("Error deleting product:", error);
           alert("Failed to delete product. Please try again.");
         }
       }
     },
+  },
+  mounted() {
+    // Load products when component mounts
+    this.fetchProducts();
   },
 };
 </script>
