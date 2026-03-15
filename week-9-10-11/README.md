@@ -39,27 +39,37 @@
 | Path | Type | Description |
 |------|------|-------------|
 | **src/** | Folder | Main source code directory |
-| `src/main.js` | File | Application entry point - initializes Vue app, router, and mounts to DOM |
-| `src/App.vue` | File | Root Vue component - main application layout wrapper |
+| `src/main.js` | File | Application entry point - initializes Vue app, Vuex store, router, and mounts to DOM |
+| `src/App.vue` | File | Root Vue component - main application layout wrapper with conditional navigation based on auth state |
 | `src/style.css` | File | Global CSS styles for the application |
-| **src/api/** | Folder | API service layer for backend communication |
-| `src/api/productApi.js` | File | Product API functions using Axios (getAllProducts, createProduct, deleteProduct, etc.) |
+| **src/store/** | Folder | **Vuex state management** - centralized data store |
+| `src/store/index.js` | File | Main Vuex store - combines all modules (products, auth) |
+| **src/store/modules/** | Folder | Vuex store modules for different features |
+| `src/store/modules/products.js` | File | **Products module** - manages product state, CRUD operations, pagination (state, getters, mutations, actions) |
+| `src/store/modules/auth.js` | File | **Auth module** - manages authentication state, login/logout, user data (state, getters, mutations, actions) |
+| **src/api/** | Folder | API service layer for backend communication using Axios |
+| `src/api/productApi.js` | File | Product API functions (getAllProducts, getProductById, createProduct, updateProduct, patchProduct, deleteProduct) |
+| `src/api/authApi.js` | File | Authentication API functions (loginUser) |
 | **src/assets/** | Folder | Static assets (images, icons) used in components |
 | **src/components/** | Folder | Reusable Vue components |
-| `src/components/AddProductModal.vue` | File | Modal component for adding new products with form inputs (title, price, category, description, image) |
-| **src/router/** | Folder | Vue Router configuration for navigation |
-| `src/router/index.js` | File | Router setup with routes: Home (/), About (/about), Products (/products) |
-| **src/views/** | Folder | Page-level Vue components (route views) |
-| `src/views/HomeView.vue` | File | Home page component |
-| `src/views/AboutView.vue` | File | About page component |
-| `src/views/ProductView.vue` | File | Products page with CRUD operations, table display, pagination, and product management |
+| `src/components/AddProductModal.vue` | File | Modal component for adding new products with form inputs and validation |
+| **src/router/** | Folder | Vue Router configuration for navigation with route guards |
+| `src/router/index.js` | File | Router setup with routes and authentication guards for protected routes |
+| **src/views/** | Folder | Page-level Vue components (route views) - all connected to Vuex store |
+| `src/views/HomeView.vue` | File | Home page component - landing page |
+| `src/views/AboutView.vue` | File | About page component - information page |
+| `src/views/LoginView.vue` | File | Login page - dispatches auth/login action to Vuex store |
+| `src/views/ProfileView.vue` | File | Profile page - displays user info from Vuex auth module, logout functionality |
+| `src/views/ProductView.vue` | File | Products page - uses Vuex products module for CRUD operations, pagination, and state management |
+| `src/views/AdminView.vue` | File | Admin panel page - requires admin role (protected route) |
 
 ### Technology Stack
 
 | Technology | Version | Purpose |
 |------------|---------|---------|
 | Vue.js | 3.5.30 | Progressive JavaScript framework for building user interfaces |
-| Vue Router | 4.6.4 | Official routing library for Vue.js single-page applications |
+| Vue Router | 4.6.4 | Official routing library for Vue.js single-page applications with route guards |
+| **Vuex** | **4.x** | **Official state management library for Vue.js - centralized store for products and auth** |
 | Axios | 1.13.6 | Promise-based HTTP client for API requests |
 | Vuejs-paginate-next | 1.0.2 | Pagination component for Vue 3 |
 | Vite | 8.0.0 | Fast build tool and development server |
@@ -71,75 +81,92 @@
 │                                    User                                      │
 │                              [Person]                                        │
 │                                                                              │
-│              A user managing products through the web interface              │
+│              Manages products and authenticates through web interface        │
 └───────────────────────────────┬──────────────────────────────────────────────┘
                                 │
-                                │ Uses
-                                │ [HTTPS]
+                                │ Uses (HTTPS)
+                                │
                                 v
 ┌───────────────────────────────────────────────────────────────────────────────┐
 │                     Vue.js Single Page Application                            │
 │                          [Container: Web App]                                 │
-│                   Technology: Vue 3, Vue Router, Vite                         │
+│                   Technology: Vue 3, Vuex, Vue Router, Vite                   │
 │                                                                               │
 │  ┌─────────────────────────────────────────────────────────────────────────┐  │
-│  │  main.js + App.vue                                                      │  │
-│  │  [Application Bootstrap]                                                │  │
-│  │  - Initializes Vue app                                                  │  │
-│  │  - Mounts router                                                        │  │
+│  │                     Application Bootstrap                               │  │
+│  │                    [Core Initialization]                                │  │
+│  │                                                                         │  │
+│  │  • Initializes Vue application                                          │  │
+│  │  • Registers state management store                                     │  │
+│  │  • Registers routing system                                             │  │
 │  └────────────────┬────────────────────────────────────────────────────────┘  │
 │                   │                                                           │
 │                   │                                                           │
 │  ┌────────────────v─────────────────┐     ┌──────────────────────────────┐    │
-│  │      router/ (index.js)          │     │     assets/                  │    │
-│  │   [Routing Layer]                │     │  [Static Resources]          │    │
-│  │   - Route definitions            │     │  - Images (hero.png)         │    │
-│  │   - Navigation logic             │     │  - Icons (vite.svg, vue.svg) │    │
-│  └────┬─────┬──────────┬────────────┘     └──────────────────────────────┘    │
-│       │     │          │                                                      │
-│       │     │          │                                                      │
-│  ┌────v─────v──────────v────────────────────────────────────────────────────┐ │
-│  │                     views/                                               │ │
-│  │                  [Page Views]                                            │ │
-│  │  ┌──────────────┐  ┌───────────────┐  ┌───────────────────────────┐      │ │
-│  │  │ HomeView.vue │  │AboutView.vue  │  │   ProductView.vue         │      │ │
-│  │  │   [/]        │  │  [/about]     │  │     [/products]           │      │ │
-│  │  └──────────────┘  └───────────────┘  └────────┬──────────────────┘      │ │
-│  │                                                │                         │ │
-│  │                                                │ Uses                    │ │
-│  └────────────────────────────────────────────────┼─────────────────────────┘ │
-│                                                   │                           │
-│  ┌────────────────────────────────────────────────v─────────────────────────┐ │
-│  │                      components/                                         │ │
-│  │                 [Reusable Components]                                    │ │
-│  │  ┌──────────────────────────────────────────────────────────────────┐    │ │
-│  │  │            AddProductModal.vue                                   │    │ │
-│  │  │  - Product form (title, price, category, description, image)     │    │ │
-│  │  │  - Form validation                                               │    │ │
-│  │  │  - Emit events to parent                                         │    │ │
-│  │  └──────────────────────────────────────────────────────────────────┘    │ │
-│  └──────────────────────────────────────────────────────────────────────────┘ │
-│                                                                               │
+│  │        Routing System            │     │     Static Assets            │    │
+│  │      [Navigation Layer]          │     │     [Resources]              │    │
+│  │                                  │     │                              │    │
+│  │  • Route definitions             │     │  • Images                    │    │
+│  │  • Navigation management         │     │  • Icons                     │    │
+│  │  • Authentication guards         │     │  • Media files               │    │
+│  └────┬─────────────────────────────┘     └──────────────────────────────┘    │
+│       │                                                                        │
+│       │ Routes to                                                              │
+│       v                                                                        │
 │  ┌──────────────────────────────────────────────────────────────────────────┐ │
-│  │                          api/ (productApi.js)                            │ │
-│  │                         [API Service Layer]                              │ │
+│  │                        View Components                                   │ │
+│  │                    [Presentation Layer]                                  │ │
+│  │                                                                          │ │
+│  │  • Home page                    • Product management page               │ │
+│  │  • About page                   • User profile page                     │ │
+│  │  • Login page                   • Admin panel page                      │ │
+│  │                                                                          │ │
+│  │  Reads state from and dispatches actions to Vuex Store                  │ │
+│  └────┬────────────────────────────────────────────────┬──────────────────┘ │
+│       │                                                 │                     │
+│       │ Interacts with                                  │                     │
+│       v                                                 v                     │
+│  ┌────────────────────────────┐       ┌─────────────────────────────────┐    │
+│  │    Reusable Components     │       │      Vuex Store                 │    │
+│  │    [UI Components]         │       │   [State Management]            │    │
+│  │                            │       │                                 │    │
+│  │  • Modal dialogs           │       │  ┌──────────────────────────┐   │    │
+│  │  • Forms                   │       │  │   Products Module        │   │    │
+│  │  • UI widgets              │       │  │   • Product data         │   │    │
+│  └────────────────────────────┘       │  │   • CRUD operations      │   │    │
+│                                       │  │   • Pagination state     │   │    │
+│                                       │  └──────────────────────────┘   │    │
+│                                       │                                 │    │
+│                                       │  ┌──────────────────────────┐   │    │
+│                                       │  │   Authentication Module  │   │    │
+│                                       │  │   • User data            │   │    │
+│                                       │  │   • Auth state           │   │    │
+│                                       │  │   • Session management   │   │    │
+│                                       │  └──────────────────────────┘   │    │
+│                                       └──────────┬──────────────────────┘    │
+│                                                  │                            │
+│                                                  │ Calls                      │
+│                                                  v                            │
+│  ┌──────────────────────────────────────────────────────────────────────────┐ │
+│  │                          API Services                                    │ │
+│  │                       [HTTP Client Layer]                                │ │
 │  │                        Technology: Axios                                 │ │
-│  │  - getAllProducts()         - createProduct()                            │ │
-│  │  - getProductById()         - updateProduct()                            │ │
-│  │  - getProductsByCategory()  - patchProduct()                             │ │
-│  │  - deleteProduct()                                                       │ │
+│  │                                                                          │ │
+│  │  • Product API Service          • Authentication API Service            │ │
+│  │    - CRUD operations               - User authentication                │ │
+│  │    - Product queries               - Session validation                 │ │
 │  └────────────────────────────────┬─────────────────────────────────────────┘ │
 └───────────────────────────────────┴───────────────────────────────────────────┘
                                     │
-                                    │ Makes API calls to
-                                    │ [HTTPS/JSON]
+                                    │ HTTP Requests (JSON)
+                                    │
                                     v
 ┌───────────────────────────────────────────────────────────────────────────────┐
-│                      Fake Store API                                           │
-│                   [External System]                                           │
-│              https://fakestoreapi.com                                         │
+│                          External REST API                                    │
+│                          [External System]                                    │
+│                       https://fakestoreapi.com                                │
 │                                                                               │
-│  Provides RESTful API for product data (GET, POST, PUT, PATCH, DELETE)        │
+│              Provides product data and authentication services                │
 └───────────────────────────────────────────────────────────────────────────────┘
 
 Legend:
@@ -149,15 +176,304 @@ Legend:
 
 ### Architecture Overview
 
-**Application Flow:**
+**Application Flow with Vuex:**
 
 1. **User** interacts with the **Vue.js SPA** through a web browser
-2. **main.js + App.vue** initializes the application and Vue Router
-3. **Router** directs users to different **Views** (Home, About, Products)
-4. **ProductView** uses **AddProductModal** component for creating products
-5. **Views** call **API Service Layer** (productApi.js) for data operations
-6. **API Service** makes HTTP requests to **Fake Store API** using Axios
-7. **Fake Store API** returns JSON data back through the chain
+2. **Application Bootstrap** initializes Vuex store and routing system
+3. **Routing System** navigates between views with authentication guards
+4. **View Components** display UI and interact with Vuex Store
+5. **Vuex Store** manages centralized state (products and authentication)
+6. **Store Actions** call API Services for backend communication
+7. **API Services** send HTTP requests to external REST API
+8. **State Updates** trigger reactive UI updates across components
+
+**Key State Management Flow:**
+
+```
+User Action → View Component → Vuex Action → API Service →
+Backend API → Mutation → State Update → UI Re-render
+```
+
+3. **App.vue** displays navigation based on authentication state from **Vuex auth module**
+2. **Router** directs users to different **Views** (Home, About, Login, Profile, Products, Admin)
+3. **Views** dispatch actions to **Vuex store modules** (products or auth)
+4. **Vuex actions** call **API Service Layer** (productApi.js, authApi.js) for data operations
+5. **API Service** makes HTTP requests to **Fake Store API** using Axios
+6. **API responses** are committed as **mutations** to update **Vuex state**
+7. **Components** reactively update when **Vuex state** changes
+8. **localStorage** syncs with auth module for session persistence
+
+**Key State Management Flow:**
+
+```
+User Action → Component Method → Dispatch Vuex Action → API Call →
+Commit Mutation → Update State → Components Auto-Update
+```
+
+## C4 Component Diagram (with Vuex State Management)
+
+This diagram shows the high-level internal structure of the Vue.js application with Vuex centralized state management.
+
+```
+┌─────────────────────────────────────────────────────────────────────────────────────────┐
+│                        Vue.js Single Page Application                                   │
+│                    [Container: JavaScript/Vue 3 Application]                            │
+│                                                                                         │
+│  ┌────────────────────────────────────────────────────────────────────────────────┐     │
+│  │                      Application Bootstrap                                     │     │
+│  │                    [Component: Entry Point]                                    │     │
+│  │                     Technology: JavaScript                                     │     │
+│  │                                                                                │     │
+│  │  • Initializes Vue application                                                │     │
+│  │  • Registers Vuex store                                                       │     │
+│  │  • Registers routing system                                                   │     │
+│  │  • Mounts application to DOM                                                  │     │
+│  └───────────────────────┬────────────────────────┬───────────────────────────────┘     │
+│                          │                        │                                     │
+│                          │ Initializes            │ Initializes                         │
+│                          v                        v                                     │
+│  ┌──────────────────────────────────────┐  ┌─────────────────────────────────────────┐  │
+│  │      Routing System                  │  │        Vuex Store                       │  │
+│  │  [Component: Navigation]             │  │  [Component: State Management]          │  │
+│  │   Technology: Vue Router             │  │     Technology: Vuex                    │  │
+│  │                                      │  │                                         │  │
+│  │  • URL-based navigation              │  │  ┌───────────────────────────────────┐  │  │
+│  │  • Route mapping to views            │  │  │   Products Module                 │  │  │
+│  │  • Authentication guards             │  │  │   [Sub-Component: Store Module]   │  │  │
+│  │  • Role-based access control         │  │  │                                   │  │  │
+│  └───────┬──────────────────────────────┘  │  │   • Product data management       │  │  │
+│          │                                  │  │   • CRUD operations               │  │  │
+│          │ Routes to                        │  │   • Pagination state              │  │  │
+│          v                                  │  │   • Loading states               │  │  │
+│  ┌──────────────────────────────────────┐  │  │                                   │  │  │
+│  │      Root Component                  │  │  │   Provides:                       │  │  │
+│  │  [Component: App Shell]              │  │  │   • Product queries ──────────┐   │  │  │
+│  │    Technology: Vue 3                 │  │  │   • State mutations           │   │  │  │
+│  │                                      │  │  │   • Async actions             │   │  │  │
+│  │  • Global navigation                 │  │  └───────────────────────────────┼───┘  │  │
+│  │  • Content routing                   │  │                                  │      │  │
+│  │  • Auth-based UI    ─────────────────┼──┼──────────────────────────────────┘      │  │
+│  │                            Reads     │  │           Reads state                   │  │
+│  │                            auth      │  │                                         │  │
+│  │                            state     │  │  ┌───────────────────────────────────┐  │  │
+│  └───────┬──────────────────────────────┘  │  │   Auth Module                     │  │  │
+│          │                                  │  │   [Sub-Component: Store Module]   │  │  │
+│          │ Contains                         │  │                                   │  │  │
+│          v                                  │  │   • User authentication          │  │  │
+│  ┌──────────────────────────────────────┐  │  │   • Session management           │  │  │
+│  │        View Components               │  │  │   • Role/permission data         │  │  │
+│  │   [Component: Page Views]            │  │  │   • Loading states               │  │  │
+│  │     Technology: Vue 3                │  │  │                                   │  │  │
+│  │                                      │  │  │   Provides:                       │  │  │
+│  │  ┌────────────────────────────────┐  │  │  │   • Auth queries ─────────────┐   │  │  │
+│  │  │  Product Management View       │  │  │  │   • Login/logout operations  │   │  │  │
+│  │  │  [Page: Products]              │  │  │  │   • Session persistence      │   │  │  │
+│  │  │                                │  │  │  └──────────────────────────────┼───┘  │  │
+│  │  │  • Product display             │  │  │                                 │      │  │
+│  │  │  • Pagination UI       ────────┼──┼──┼─> Dispatches product actions   │      │  │
+│  │  │  • CRUD operations             │  │  │                                 │      │  │
+│  │  │  • Uses product modal          │  │  │                                 │      │  │
+│  │  └────────────────────────────────┘  │  │                                 │      │  │
+│  │                                      │  │                                 │      │  │
+│  │  ┌────────────────────────────────┐  │  │                                 │      │  │
+│  │  │  Login View                    │  │  │                                 │      │  │
+│  │  │  [Page: Authentication]        │  │  │                                 │      │  │
+│  │  │                                │  │  │                                 │      │  │
+│  │  │  • Login form                  │  │  │                                 │      │  │
+│  │  │  • Credential input    ────────┼──┼──┼─> Dispatches login ────────────┘      │  │
+│  │  │  • Form validation             │  │  │                                        │  │
+│  │  └────────────────────────────────┘  │  │                                        │  │
+│  │                                      │  │                                        │  │
+│  │  ┌────────────────────────────────┐  │  │                                        │  │
+│  │  │  Profile View                  │  │  │                                        │  │
+│  │  │  [Page: User Profile]          │  │  │                                        │  │
+│  │  │                                │  │  │                                        │  │
+│  │  │  • User information  ──────────┼──┼──┼─> Reads user data                      │  │
+│  │  │  • Logout action     ──────────┼──┼──┼─> Dispatches logout                    │  │
+│  │  └────────────────────────────────┘  │  │                                        │  │
+│  │                                      │  │                                        │  │
+│  │  ┌────────────────────────────────┐  │  │         Syncs with                     │  │
+│  │  │  Home View                     │  │  │         localStorage                   │  │
+│  │  │  [Page: Landing]               │  │  │                ↕                        │  │
+│  │  └────────────────────────────────┘  │  │      Browser localStorage              │  │
+│  │                                      │  │      • Auth session data               │  │
+│  │  ┌────────────────────────────────┐  │  │                                        │  │
+│  │  │  About View                    │  │  │                                        │  │
+│  │  │  [Page: Information]           │  │  │                                        │  │
+│  │  └────────────────────────────────┘  │  │                                        │  │
+│  │                                      │  │                                        │  │
+│  │  ┌────────────────────────────────┐  │  │                                        │  │
+│  │  │  Admin View                    │  │  │                                        │  │
+│  │  │  [Page: Administration]        │  │  │                                        │  │
+│  │  └────────────────────────────────┘  │  └────────────────────────────────────────┘  │
+│  └───────────────┬───────────────────────┘                                             │
+│                  │                                                                     │
+│                  │ Uses                                                                │
+│                  v                                                                     │
+│  ┌──────────────────────────────────────┐                                              │  │
+│  │      Reusable Components             │                                              │  │
+│  │  [Component: UI Elements]            │                                              │  │
+│  │    Technology: Vue 3                 │                                              │  │
+│  │                                      │                                              │  │
+│  │  • Product form modal                │                                              │  │
+│  │  • Form validation                   │                                              │  │
+│  │  • Event emission                    │                                              │  │
+│  └──────────────────────────────────────┘                                              │  │
+│                                                                                         │  │
+│  ┌────────────────────────────────────────────────────────────────────────────────┐    │  │
+│  │                          API Service Layer                                     │    │  │
+│  │                    [Component: HTTP Client Services]                           │    │  │
+│  │                          Technology: Axios                                     │    │  │
+│  │                                                                                │    │  │
+│  │  ┌──────────────────────────────────────────────────────────────────────────┐  │    │  │
+│  │  │  Product API Service                                                     │  │    │  │
+│  │  │  [API Service: Product Operations]                                      │  │    │  │
+│  │  │                                                                          │  │    │  │
+│  │  │  • CRUD operations  ◄───────────────────────────────────────────────────────────┼──┘
+│  │  │  • Data transformation       Called by Vuex product actions              │  │    │
+│  │  └──────────────────────────────────────────────────────────────────────────┘  │    │
+│  │                                                                                │    │
+│  │  ┌──────────────────────────────────────────────────────────────────────────┐  │    │
+│  │  │  Auth API Service                                                        │  │    │
+│  │  │  [API Service: Authentication]                                           │  │    │
+│  │  │                                                                          │  │    │
+│  │  │  • Login operations  ◄──────────── Called by Vuex auth actions           │  │    │
+│  │  └──────────────────────────────────────────────────────────────────────────┘  │    │
+│  └────────────────────────────────────┬───────────────────────────────────────────┘    │
+│                                       │                                                │
+└───────────────────────────────────────┼────────────────────────────────────────────────┘
+                                        │
+                                        │ HTTP Requests
+                                        │ REST API calls
+                                        v
+                        ┌──────────────────────────────────────┐
+                        │     External REST API                │
+                        │  [External System: Backend Service]  │
+                        │                                      │
+                        │  Provides:                           │
+                        │  • Product endpoints                 │
+                        │  • Authentication endpoints          │
+                        │  • Data persistence                  │
+                        └──────────────────────────────────────┘
+
+Legend:
+──────►   Data Flow / Dependency
+┌─────┐   Component Boundary
+│     │
+└─────┘
+```
+
+### Component Diagram Details
+
+#### Key Architectural Patterns
+
+**1. Centralized State Management**
+
+```
+Components → Store Actions → Store Mutations → State → Reactive Updates → Components
+                    ↓
+              API Service Layer
+```
+
+**2. Module Structure**
+
+- **Products Module**: Manages product data, CRUD operations, pagination
+- **Auth Module**: Manages authentication state, login/logout, session persistence
+
+**3. Component Hierarchy**
+
+```
+Application Bootstrap
+  ├── Routing System
+  ├── Root Component
+  │   └── View Components
+  │       └── Reusable Components
+  └── Vuex Store
+      ├── Products Module
+      └── Auth Module
+```
+
+**4. Data Flow Pattern**
+
+```
+User Interaction
+        ↓
+Component dispatches action
+        ↓
+Store action calls API service
+        ↓
+API request to backend
+        ↓
+Response received
+        ↓
+Store mutation updates state
+        ↓
+State change triggers reactive update
+        ↓
+UI automatically re-renders
+```
+
+**5. Authentication Flow**
+
+```
+Login view receives credentials
+        ↓
+Auth action dispatched
+        ↓
+API authentication call
+        ↓
+Success response
+        ↓
+Store mutation updates user state
+        ↓
+Session persisted to localStorage
+        ↓
+Components read new auth state
+        ↓
+Navigation updates based on role
+        ↓
+Router redirects to protected route
+```
+
+**6. Communication Patterns**
+
+- **Props & Events**: Local component communication
+- **Vuex Store**: Global state shared across components
+- **Router**: URL-based navigation and route guards
+- **localStorage**: Authentication session persistence
+
+### Benefits of This Architecture
+
+✅ **Separation of Concerns**
+
+- Views handle UI presentation
+- Store handles business logic
+- API services handle HTTP communication
+- Router handles navigation
+
+✅ **Single Source of Truth**
+
+- All application state centralized in Vuex
+- No duplicate data across components
+- Consistent data throughout application
+
+✅ **Scalability**
+
+- Easy to add new store modules
+- Modular structure supports team development
+- Clear boundaries between components
+
+✅ **Maintainability**
+
+- Organized by feature domains
+- Easy to locate and debug issues
+- Predictable data flow patterns
+
+✅ **Testability**
+
+- Store can be tested independently
+- Components testable with mocked store
+- API services isolated for unit testing
 
 ## Vue.js Component Communication - Emit Events Flow
 
