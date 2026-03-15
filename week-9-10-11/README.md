@@ -194,7 +194,7 @@ User Action → View Component → Vuex Action → API Service →
 Backend API → Mutation → State Update → UI Re-render
 ```
 
-3. **App.vue** displays navigation based on authentication state from **Vuex auth module**
+1. **App.vue** displays navigation based on authentication state from **Vuex auth module**
 2. **Router** directs users to different **Views** (Home, About, Login, Profile, Products, Admin)
 3. **Views** dispatch actions to **Vuex store modules** (products or auth)
 4. **Vuex actions** call **API Service Layer** (productApi.js, authApi.js) for data operations
