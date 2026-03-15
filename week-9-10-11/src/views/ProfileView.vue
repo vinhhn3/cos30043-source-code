@@ -18,6 +18,7 @@ export default {
     handleLogout() {
       localStorage.removeItem("isAuthenticated");
       localStorage.removeItem("username");
+      localStorage.removeItem("isAdmin");
       this.username = "Not logged in";
       router.push("/");
     },

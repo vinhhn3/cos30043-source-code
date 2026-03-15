@@ -1,15 +1,17 @@
 <template>
   <h1>Full CRUD With Vue.js</h1>
   <nav>
-    <RouterLink to="/">Go to Home</RouterLink> |
-    <RouterLink to="/about">Go to About</RouterLink> |
+    <RouterLink to="/">Go to Home | </RouterLink>
+    <RouterLink to="/about">Go to About | </RouterLink>
     <RouterLink v-if="isAuthenticated" to="/products"
-      >Go to Products</RouterLink
-    >
-    |
-    <RouterLink to="/login">Go to Login</RouterLink> |
-    <RouterLink v-if="isAuthenticated" to="/profile">Go to Profile</RouterLink>
-    |
+      >Go to Products |
+    </RouterLink>
+
+    <RouterLink v-if="!isAuthenticated" to="/login">Go to Login | </RouterLink>
+    <RouterLink v-if="isAuthenticated" to="/profile"
+      >Go to Profile |
+    </RouterLink>
+
     <RouterLink v-if="isAuthenticated && isAdmin" to="/admin"
       >Go to Admin</RouterLink
     >
