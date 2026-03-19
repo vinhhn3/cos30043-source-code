@@ -123,7 +123,7 @@ export default {
       return this.products.slice(start, end);
     },
   },
-  
+
   methods: {
     async fetchProducts() {
       this.loading = true;
@@ -227,6 +227,22 @@ export default {
         }
       }
     },
+    getProductsFromLocalStorage() {
+      const productsData = localStorage.getItem("products");
+      if (productsData) {
+        try {
+          this.products = JSON.parse(productsData);
+          console.log(this.products);
+        } catch (error) {
+          console.error("Error parsing products from localStorage:", error);
+          this.products = [];
+        }
+      }
+    },
+  },
+
+  mounted() {
+    this.getProductsFromLocalStorage();
   },
 };
 </script>
