@@ -2,26 +2,26 @@
   <div v-if="visible" class="modal-overlay" @click.self="closeModal">
     <div class="modal-content">
       <div class="modal-header">
-        <h2>Add New Product</h2>
+        <h2>Edit Product</h2>
         <button class="close-btn" @click="closeModal">&times;</button>
       </div>
       <div class="modal-body">
-        <form @submit.prevent="editProduct">
+        <form @submit.prevent="submitProduct">
           <div class="form-group">
-            <label for="title">Title:</label>
+            <label for="edit-title">Title:</label>
             <input
-              id="title"
-              v-model="product.title"
+              id="edit-title"
+              v-model="editedProduct.title"
               type="text"
               required
               placeholder="Enter product title"
             />
           </div>
           <div class="form-group">
-            <label for="price">Price:</label>
+            <label for="edit-price">Price:</label>
             <input
-              id="price"
-              v-model.number="product.price"
+              id="edit-price"
+              v-model.number="editedProduct.price"
               type="number"
               step="0.01"
               min="0"
@@ -30,8 +30,12 @@
             />
           </div>
           <div class="form-group">
-            <label for="category">Category:</label>
-            <select id="category" v-model="product.category" required>
+            <label for="edit-category">Category:</label>
+            <select
+              id="edit-category"
+              v-model="editedProduct.category"
+              required
+            >
               <option value="" disabled>Select a category</option>
               <option value="jewelery">jewelery</option>
               <option value="electronics">electronics</option>
@@ -40,20 +44,20 @@
             </select>
           </div>
           <div class="form-group">
-            <label for="description">Description:</label>
+            <label for="edit-description">Description:</label>
             <textarea
-              id="description"
-              v-model="product.description"
+              id="edit-description"
+              v-model="editedProduct.description"
               rows="4"
               required
               placeholder="Enter product description"
             ></textarea>
           </div>
           <div class="form-group">
-            <label for="image">Image URL:</label>
+            <label for="edit-image">Image URL:</label>
             <input
-              id="image"
-              v-model="product.image"
+              id="edit-image"
+              v-model="editedProduct.image"
               type="url"
               required
               placeholder="Enter image URL"
@@ -63,7 +67,7 @@
             <button type="button" class="btn-cancel" @click="closeModal">
               Cancel
             </button>
-            <button type="submit" class="btn-submit">Edit Product</button>
+            <button type="submit" class="btn-submit">Update Product</button>
           </div>
         </form>
       </div>
@@ -73,7 +77,7 @@
 
 <script>
 export default {
-  name: "AddProductModal",
+  name: "EditProductModal",
   props: {
     visible: {
       type: Boolean,
@@ -82,6 +86,7 @@ export default {
     product: {
       type: Object,
       default: () => ({
+        id: null,
         title: "",
         price: 0,
         category: "",
@@ -91,15 +96,35 @@ export default {
     },
   },
   data() {
-    return {};
+    return {
+      editedProduct: {
+        id: null,
+        title: "",
+        price: 0,
+        category: "",
+        description: "",
+        image: "",
+      },
+    };
   },
-
+  watch: {
+    product: {
+      handler(newProduct) {
+        if (newProduct && newProduct.id) {
+          this.editedProduct = { ...newProduct };
+        }
+      },
+      deep: true,
+      immediate: true,
+    },
+  },
   methods: {
     closeModal() {
       this.$emit("close");
     },
-    editProduct() {
-      this.$emit("add", { ...this.product });
+    submitProduct() {
+      console.log("Submitting updated product:", this.editedProduct);
+      this.$emit("update", { ...this.editedProduct });
       this.closeModal();
     },
   },
@@ -138,7 +163,7 @@ export default {
   justify-content: space-between;
   align-items: center;
   padding: 1.5rem 2rem;
-  background: linear-gradient(135deg, #43e97b 0%, #38f9d7 100%);
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
   border-radius: 16px 16px 0 0;
 }
 
@@ -207,8 +232,8 @@ export default {
 .form-group textarea:focus,
 .form-group select:focus {
   outline: none;
-  border-color: #43e97b;
-  box-shadow: 0 0 0 3px rgba(67, 233, 123, 0.1);
+  border-color: #667eea;
+  box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
   transform: translateY(-2px);
 }
 
@@ -220,7 +245,7 @@ export default {
 .form-group select {
   cursor: pointer;
   appearance: none;
-  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 12 12'%3E%3Cpath fill='%2343e97b' d='M6 9L1 4h10z'/%3E%3C/svg%3E");
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 12 12'%3E%3Cpath fill='%23667eea' d='M6 9L1 4h10z'/%3E%3C/svg%3E");
   background-repeat: no-repeat;
   background-position: right 1rem center;
   padding-right: 2.5rem;
@@ -259,15 +284,15 @@ export default {
 }
 
 .btn-submit {
-  background: linear-gradient(135deg, #43e97b 0%, #38f9d7 100%);
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
   color: white;
-  box-shadow: 0 4px 15px rgba(67, 233, 123, 0.4);
+  box-shadow: 0 4px 15px rgba(102, 126, 234, 0.4);
 }
 
 .btn-submit:hover {
-  background: linear-gradient(135deg, #38d170 0%, #2de0c4 100%);
+  background: linear-gradient(135deg, #5568d3 0%, #6a3f91 100%);
   transform: translateY(-2px);
-  box-shadow: 0 6px 20px rgba(67, 233, 123, 0.6);
+  box-shadow: 0 6px 20px rgba(102, 126, 234, 0.6);
 }
 
 .btn-cancel:active,
@@ -307,12 +332,12 @@ export default {
 }
 
 .modal-content::-webkit-scrollbar-thumb {
-  background: linear-gradient(135deg, #43e97b 0%, #38f9d7 100%);
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
   border-radius: 10px;
 }
 
 .modal-content::-webkit-scrollbar-thumb:hover {
-  background: linear-gradient(135deg, #38d170 0%, #2de0c4 100%);
+  background: linear-gradient(135deg, #5568d3 0%, #6a3f91 100%);
 }
 
 /* Responsive Design */

@@ -74,6 +74,13 @@
       @close="handleCloseModal"
       @add="handleAddProduct"
     />
+
+    <EditProductModal
+      :visible="showEditModal"
+      :product="selectedProduct"
+      @close="handleCloseEditModal"
+      @update="handleEditProduct"
+    />
   </div>
 </template>
 
@@ -83,13 +90,17 @@ import {
   createProduct,
   deleteProduct,
   getAllProducts,
+  updateProduct,
 } from "../api/productApi";
 import AddProductModal from "../components/AddProductModal.vue";
+import EditProductModal from "../components/EditProductModal.vue";
+import router from "../router";
 
 export default {
   components: {
     Paginate,
     AddProductModal,
+    EditProductModal,
   },
   data() {
     return {
@@ -98,6 +109,8 @@ export default {
       currentPage: 1,
       itemsPerPage: 5,
       showAddModal: false,
+      showEditModal: false,
+      selectedProduct: null,
     };
   },
   computed: {
@@ -110,6 +123,7 @@ export default {
       return this.products.slice(start, end);
     },
   },
+  
   methods: {
     async fetchProducts() {
       this.loading = true;
@@ -122,6 +136,8 @@ export default {
 
         this.products = response.data;
         console.log("Products:", response.data);
+
+        localStorage.setItem("products", JSON.stringify(response.data));
       } catch (error) {
         console.error("Error fetching products:", error);
       } finally {
@@ -137,6 +153,12 @@ export default {
     handleCloseModal() {
       this.showAddModal = false;
     },
+
+    handleCloseEditModal() {
+      this.showEditModal = false;
+      this.selectedProduct = null;
+    },
+
     async handleAddProduct(productData) {
       console.log("Adding product:", productData);
       const response = await createProduct(productData);
@@ -149,16 +171,40 @@ export default {
       this.products.push(newProduct);
       this.showAddModal = false;
     },
-    async editProduct(product) {
+    editProduct(product) {
       // Implementation for editing a product
       // TODO: Show a form pre-filled with product details, allow user to edit, then call API to update product and amend it in the products array
+      this.selectedProduct = product;
+      this.showEditModal = true;
+    },
+
+    async handleEditProduct(updatedProduct) {
+      // Implementation for handling the edited product data
+      console.log("Updating product:", updatedProduct);
+      const response = await updateProduct(updatedProduct.id, updatedProduct);
+      console.log("Update response:", response);
+      if (response.status !== 200) {
+        alert("Failed to update product. Please try again.");
+        throw new Error(
+          `Failed to update product with ID ${updatedProduct.id}`,
+        );
+      }
+      // Update the product in the products array
+      const index = this.products.findIndex(
+        (product) => product.id === updatedProduct.id,
+      );
+      if (index !== -1) {
+        this.products.splice(index, 1, response.data);
+      }
+      this.showEditModal = false;
+      this.selectedProduct = null;
     },
 
     async viewProduct(product) {
       // Implementation for viewing product details
       // TODO
       // Show a modal or navigate to a new page with detailed product information
-      console.log(product);
+      router.push(`/products/${product.id}`);
     },
 
     async handleDeleteProduct(productId) {
