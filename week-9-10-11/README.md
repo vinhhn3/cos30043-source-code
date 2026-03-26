@@ -12,14 +12,14 @@
 
 **Base URL:** `https://fakestoreapi.com`
 
-| Method | Endpoint | Description | Function | Parameters | Response | Status |
-|--------|----------|-------------|----------|------------|----------|--------|
-| GET | `/products` | Retrieves a list of all products from the store | `getAllProducts()` | None | Array of product objects | ✅ Implemented |
-| GET | `/products/{id}` | Retrieves a single product by its ID | `getProductById(id)` | `id` (number) - Product ID | Single product object | 🔄 TODO |
-| POST | `/products` | Creates a new product in the store | `createProduct(productData)` | Product object (title, price, description, category, image) | Created product object with ID | ✅ Implemented |
-| PUT | `/products/{id}` | Performs a full update of a product (replaces all fields) | `updateProduct(id, productData)` | `id` (number), Complete product object | Updated product object | 🔄 TODO |
-| PATCH | `/products/{id}` | Performs a partial update (updates only specified fields) | `patchProduct(id, productData)` | `id` (number), Partial product object | Updated product object | 🔄 TODO |
-| DELETE | `/products/{id}` | Deletes a product from the store by its ID | `deleteProduct(id)` | `id` (number) - Product ID to delete | Deleted product object | ✅ Implemented |
+| Method | Endpoint           | Description                                               | Function                           | Parameters                                                  | Response                       | Status         |
+| ------ | ------------------ | --------------------------------------------------------- | ---------------------------------- | ----------------------------------------------------------- | ------------------------------ | -------------- |
+| GET    | `/products`      | Retrieves a list of all products from the store           | `getAllProducts()`               | None                                                        | Array of product objects       | ✅ Implemented |
+| GET    | `/products/{id}` | Retrieves a single product by its ID                      | `getProductById(id)`             | `id` (number) - Product ID                                | Single product object          | 🔄 TODO        |
+| POST   | `/products`      | Creates a new product in the store                        | `createProduct(productData)`     | Product object (title, price, description, category, image) | Created product object with ID | ✅ Implemented |
+| PUT    | `/products/{id}` | Performs a full update of a product (replaces all fields) | `updateProduct(id, productData)` | `id` (number), Complete product object                    | Updated product object         | 🔄 TODO        |
+| PATCH  | `/products/{id}` | Performs a partial update (updates only specified fields) | `patchProduct(id, productData)`  | `id` (number), Partial product object                     | Updated product object         | 🔄 TODO        |
+| DELETE | `/products/{id}` | Deletes a product from the store by its ID                | `deleteProduct(id)`              | `id` (number) - Product ID to delete                      | Deleted product object         | ✅ Implemented |
 
 ### Product Object Structure
 
@@ -36,33 +36,33 @@
 
 ## Folder Structure
 
-| Path | Type | Description |
-|------|------|-------------|
-| **src/** | Folder | Main source code directory |
-| `src/main.js` | File | Application entry point - initializes Vue app, router, and mounts to DOM |
-| `src/App.vue` | File | Root Vue component - main application layout wrapper |
-| `src/style.css` | File | Global CSS styles for the application |
-| **src/api/** | Folder | API service layer for backend communication |
-| `src/api/productApi.js` | File | Product API functions using Axios (getAllProducts, createProduct, deleteProduct, etc.) |
-| **src/assets/** | Folder | Static assets (images, icons) used in components |
-| **src/components/** | Folder | Reusable Vue components |
-| `src/components/AddProductModal.vue` | File | Modal component for adding new products with form inputs (title, price, category, description, image) |
-| **src/router/** | Folder | Vue Router configuration for navigation |
-| `src/router/index.js` | File | Router setup with routes: Home (/), About (/about), Products (/products) |
-| **src/views/** | Folder | Page-level Vue components (route views) |
-| `src/views/HomeView.vue` | File | Home page component |
-| `src/views/AboutView.vue` | File | About page component |
-| `src/views/ProductView.vue` | File | Products page with CRUD operations, table display, pagination, and product management |
+| Path                                   | Type   | Description                                                                                           |
+| -------------------------------------- | ------ | ----------------------------------------------------------------------------------------------------- |
+| **src/**                         | Folder | Main source code directory                                                                            |
+| `src/main.js`                        | File   | Application entry point - initializes Vue app, router, and mounts to DOM                              |
+| `src/App.vue`                        | File   | Root Vue component - main application layout wrapper                                                  |
+| `src/style.css`                      | File   | Global CSS styles for the application                                                                 |
+| **src/api/**                     | Folder | API service layer for backend communication                                                           |
+| `src/api/productApi.js`              | File   | Product API functions using Axios (getAllProducts, createProduct, deleteProduct, etc.)                |
+| **src/assets/**                  | Folder | Static assets (images, icons) used in components                                                      |
+| **src/components/**              | Folder | Reusable Vue components                                                                               |
+| `src/components/AddProductModal.vue` | File   | Modal component for adding new products with form inputs (title, price, category, description, image) |
+| **src/router/**                  | Folder | Vue Router configuration for navigation                                                               |
+| `src/router/index.js`                | File   | Router setup with routes: Home (/), About (/about), Products (/products)                              |
+| **src/views/**                   | Folder | Page-level Vue components (route views)                                                               |
+| `src/views/HomeView.vue`             | File   | Home page component                                                                                   |
+| `src/views/AboutView.vue`            | File   | About page component                                                                                  |
+| `src/views/ProductView.vue`          | File   | Products page with CRUD operations, table display, pagination, and product management                 |
 
 ### Technology Stack
 
-| Technology | Version | Purpose |
-|------------|---------|---------|
-| Vue.js | 3.5.30 | Progressive JavaScript framework for building user interfaces |
-| Vue Router | 4.6.4 | Official routing library for Vue.js single-page applications |
-| Axios | 1.13.6 | Promise-based HTTP client for API requests |
-| Vuejs-paginate-next | 1.0.2 | Pagination component for Vue 3 |
-| Vite | 8.0.0 | Fast build tool and development server |
+| Technology          | Version | Purpose                                                       |
+| ------------------- | ------- | ------------------------------------------------------------- |
+| Vue.js              | 3.5.30  | Progressive JavaScript framework for building user interfaces |
+| Vue Router          | 4.6.4   | Official routing library for Vue.js single-page applications  |
+| Axios               | 1.13.6  | Promise-based HTTP client for API requests                    |
+| Vuejs-paginate-next | 1.0.2   | Pagination component for Vue 3                                |
+| Vite                | 8.0.0   | Fast build tool and development server                        |
 
 ## C4 Container Diagram
 
@@ -401,10 +401,10 @@ The `add` event sends the complete product data object:
 
 ### Event Types in This Application
 
-| Event Name | Source | Target | Payload | Purpose |
-|------------|--------|--------|---------|---------|
-| `close` | AddProductModal | ProductView | None | Close the modal without saving |
-| `add` | AddProductModal | ProductView | Product Object | Submit new product data to parent |
+| Event Name | Source          | Target      | Payload        | Purpose                           |
+| ---------- | --------------- | ----------- | -------------- | --------------------------------- |
+| `close`  | AddProductModal | ProductView | None           | Close the modal without saving    |
+| `add`    | AddProductModal | ProductView | Product Object | Submit new product data to parent |
 
 ## How Pagination Works in ProductView.vue
 
@@ -535,19 +535,19 @@ Complete the following incomplete features:
 
 ### 1. Implement API Functions in `productApi.js`
 
-| Function | Method | Endpoint | Description |
-|----------|--------|----------|-------------|
-| `getProductById(id)` | GET | `/products/{id}` | Fetch a single product by ID |
-| `getProductsByCategory(category)` | GET | `/products/category/{category}` | Fetch products by category |
-| `updateProduct(id, productData)` | PUT | `/products/{id}` | Update complete product |
-| `patchProduct(id, productData)` | PATCH | `/products/{id}` | Update partial product |
+| Function                            | Method | Endpoint                          | Description                  |
+| ----------------------------------- | ------ | --------------------------------- | ---------------------------- |
+| `getProductById(id)`              | GET    | `/products/{id}`                | Fetch a single product by ID |
+| `getProductsByCategory(category)` | GET    | `/products/category/{category}` | Fetch products by category   |
+| `updateProduct(id, productData)`  | PUT    | `/products/{id}`                | Update complete product      |
+| `patchProduct(id, productData)`   | PATCH  | `/products/{id}`                | Update partial product       |
 
 ### 2. Implement View Functions in `ProductView.vue`
 
-| Function | Description |
-|----------|-------------|
+| Function                 | Description                                    |
+| ------------------------ | ---------------------------------------------- |
 | `editProduct(product)` | Create edit modal, update product, modify list |
-| `viewProduct(product)` | Show product details in modal or new page |
+| `viewProduct(product)` | Show product details in modal or new page      |
 
 ### 3. Checklist
 
@@ -607,6 +607,51 @@ This application implements a **client-side authentication system** using `local
 ### Complete Authentication Flow
 
 #### 1. Login Flow - Sequence Diagram
+
+The `Username` and `Password` can be found in the Fake Store API documentation
+
+```bash
+GET https://fakestoreapi.com/users
+```
+
+Below is the json response with the username and password for testing:
+
+```json
+[
+  {
+    // ...
+    "id": 1,
+    "email": "john@gmail.com",
+    "username": "johnd",
+    "password": "m38rmF$",
+    "name": {
+      "firstname": "john",
+      "lastname": "doe"
+    },
+    "phone": "1-570-236-7033",
+    "__v": 0
+  },
+  {
+    // ...
+    "id": 3,
+    "email": "kevin@gmail.com",
+    "username": "kevinryan",    // Admin user for testing
+    "password": "kev02937@",    // Admin password for testing
+    "name": {
+      "firstname": "kevin",
+      "lastname": "ryan"
+    },
+    "phone": "1-567-094-1345",
+    "__v": 0
+  },
+]
+```
+
+Below is the sequence diagram illustrating the login process when a user attempts to log in through the `LoginView.vue` component.
+
+Make sure to press `F12` to open the developer console and navigate to the `Application` tab to view the `localStorage` changes during the login process.
+
+![1774504861407](image/README/1774504861407.png)
 
 ```
 ┌────────┐     ┌─────────────┐      ┌──────────┐     ┌──────────────┐     ┌───────┐
@@ -962,13 +1007,19 @@ localStorage: {
 
 ### User Roles
 
-| Role | isAuthenticated | isAdmin | Access |
-|------|----------------|---------|--------|
-| **Guest** | false | - | Home, About, Login |
-| **User** | true | false | Home, About, Login, **Profile**, **Products** |
-| **Admin** | true | true | Home, About, Login, Profile, Products, **Admin Panel** |
+| Role            | isAuthenticated | isAdmin | Access                                                      |
+| --------------- | --------------- | ------- | ----------------------------------------------------------- |
+| **Guest** | false           | -       | Home, About, Login                                          |
+| **User**  | true            | false   | Home, About, Login,**Profile**, **Products**    |
+| **Admin** | true            | true    | Home, About, Login, Profile, Products,**Admin Panel** |
 
-## Implementation Plan
+## To Do
+
+The application must authorize users based on their role before allowing access to certain routes. This is done using **Vue Router's navigation guards**.
+
+It means we will check the user's authentication and authorization status before allowing them to navigate to protected routes.
+
+For example, if a user tries to access the Admin Panel without being an admin, they should be redirected to the home page with an alert.
 
 ### Step 1: Add Route Metadata
 
