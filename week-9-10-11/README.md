@@ -175,23 +175,23 @@ This application demonstrates **Parent-Child Communication** using Vue 3's emit 
 │  │  Template:                                                         │     │
 │  │  <button @click="addProduct">Add Product</button>                  │     │
 │  │                                                                    │     │
-│  │  <AddProductModal                                                 │     │
-│  │    :visible="showAddModal"         ← Prop binding (data down)    │     │
-│  │    @close="handleCloseModal"       ← Event listener (events up)  │     │
-│  │    @add="handleAddProduct"         ← Event listener (events up)  │     │
-│  │  />                                                               │     │
-│  └────────────────────────────────────────────────────────────────────┘    │
+│  │  <AddProductModal                                                  │     │
+│  │    :visible="showAddModal"         ← Prop binding (data down)      │     │
+│  │    @close="handleCloseModal"       ← Event listener (events up)    │     │
+│  │    @add="handleAddProduct"         ← Event listener (events up)    │     │
+│  │  />                                                                │     │
+│  └────────────────────────────────────────────────────────────────────┘     │
 │                                                                             │
-│  ┌────────────────────────────────────────────────────────────────────┐    │
-│  │  data() {                                                          │    │
-│  │    return { showAddModal: false, products: [] }                   │    │
-│  │  }                                                                 │    │
-│  └────────────────────────────────────────────────────────────────────┘    │
+│  ┌────────────────────────────────────────────────────────────────────┐     │
+│  │  data() {                                                          │     │
+│  │    return { showAddModal: false, products: [] }                    │     │
+│  │  }                                                                 │     │
+│  └────────────────────────────────────────────────────────────────────┘     │
 │                                                                             │
-│  ┌────────────────────────────────────────────────────────────────────┐    │
-│  │  methods: {                                                        │    │
-│  │    addProduct() {                                                  │    │
-│  │      this.showAddModal = true  ← Opens modal                      │    │
+│  ┌────────────────────────────────────────────────────────────────────┐     │
+│  │  methods: {                                                        │     │
+│  │    addProduct() {                                                  │     │
+│  │      this.showAddModal = true  ← Opens modal                       │    │
 │  │    },                                                              │    │
 │  │    handleCloseModal() {                                            │    │
 │  │      this.showAddModal = false ← Closes modal                     │    │
@@ -462,7 +462,7 @@ methods: {
 
 **Scenario:** You have 12 products and show 5 per page
 
-```
+```text
 All Products: [P1, P2, P3, P4, P5, P6, P7, P8, P9, P10, P11, P12]
 Items per page: 5
 Total pages needed: 12 ÷ 5 = 2.4 → 3 pages
@@ -491,7 +491,7 @@ PAGE 3 (currentPage = 3):
 
 ### Template - Display the Pagination
 
-```vue
+```js
 <!-- Show only current page products -->
 <tr v-for="product in paginatedProducts" :key="product.id">
   <td>{{ product.title }}</td>
@@ -504,7 +504,6 @@ PAGE 3 (currentPage = 3):
   :prev-text="'Previous'"
   :next-text="'Next'"
 />
-
 ```
 
 ### What Happens When User Clicks Page 2?
@@ -556,3 +555,620 @@ Complete the following incomplete features:
 - [ ] Edit product works
 - [ ] View product works
 - [ ] Tested all features
+
+## Authentication and Authorization
+
+### Overview
+
+This application implements a **client-side authentication system** using `localStorage` to manage user sessions. While simple for learning purposes, note that this approach is **not production-ready** as localStorage can be manually manipulated.
+
+### Authentication Architecture
+
+```
+┌──────────────────────────────────────────────────────────────────────────────┐
+│                          Vue.js Application                                  │
+│                                                                              │
+│  ┌─────────────────────┐    ┌──────────────────┐    ┌────────────────────┐   │
+│  │   App.vue           │    │  LoginView.vue   │    │ ProfileView.vue    │   │
+│  │  [Root Component]   │    │   [Login Page]   │    │  [Profile Page]    │   │
+│  │                     │    │                  │    │                    │   │
+│  │  - Auth Nav Display │    │  - Login Form    │    │  - User Display    │   │
+│  │  - Route Guards     │    │  - Auth API Call │    │  - Logout Button   │   │
+│  └──────────┬──────────┘    └────────┬─────────┘    └─────────┬──────────┘   │
+│             │                        │                        │              │
+│             │                        │                        │              │
+│             │        ┌───────────────┴─────────────────┐      │              │
+│             └───────>│       localStorage              │<─────┘              │
+│                      │   [Client-Side Storage]         │                     │
+│                      │                                 │                     │
+│                      │  • isAuthenticated: "true"      │                     │
+│                      │  • username: "john_doe"         │                     │
+│                      └─────────────────────────────────┘                     │
+│                                      │                                       │
+└──────────────────────────────────────┼───────────────────────────────────────┘
+                                       │
+                                       │ API Call
+                                       v
+                        ┌──────────────────────────────┐
+                        │    authApi.js                │
+                        │   [Auth Service]             │
+                        │                              │
+                        │  loginUser(username, pass)   │
+                        └──────────────┬───────────────┘
+                                       │
+                                       │ POST /auth/login
+                                       v
+                        ┌──────────────────────────────┐
+                        │   Backend Auth API           │
+                        │   [External System]          │
+                        └──────────────────────────────┘
+```
+
+### Complete Authentication Flow
+
+#### 1. Login Flow - Sequence Diagram
+
+```
+┌────────┐     ┌─────────────┐      ┌──────────┐     ┌──────────────┐     ┌───────┐
+│  User  │     │ LoginView   │      │ authApi  │     │ localStorage │     │ Router│
+└───┬────┘     └──────┬──────┘      └────┬─────┘     └──────┬───────┘     └───┬───┘
+    │                 │                  │                  │                 │
+    │ 1. Navigate to  │                  │                  │                 │
+    │    /login       │                  │                  │                 │
+    ├────────────────>│                  │                  │                 │
+    │                 │                  │                  │                 │
+    │ 2. Displays     │                  │                  │                 │
+    │    login form   │                  │                  │                 │
+    │<────────────────┤                  │                  │                 │
+    │                 │                  │                  │                 │
+    │ 3. Enters       │                  │                  │                 │
+    │    credentials  │                  │                  │                 │
+    │    and submits  │                  │                  │                 │
+    ├────────────────>│                  │                  │                 │
+    │                 │                  │                  │                 │
+    │                 │ 4. Sets loading  │                  │                 │
+    │                 │    loading=true  │                  │                 │
+    │                 │                  │                  │                 │
+    │ Shows "Logging  │                  │                  │                 │
+    │ in..." message  │                  │                  │                 │
+    │<────────────────┤                  │                  │                 │
+    │                 │                  │                  │                 │
+    │                 │ 5. Calls         │                  │                 │
+    │                 │ loginUser()      │                  │                 │
+    │                 ├─────────────────>│                  │                 │
+    │                 │                  │                  │                 │
+    │                 │                  │ 6. POST request  │                 │
+    │                 │                  │    /auth/login   │                 │
+    │                 │                  ├─────────┐        │                 │
+    │                 │                  │         │        │                 │
+    │                 │                  │<────────┘        │                 │
+    │                 │                  │                  │                 │
+    │                 │ 7. Returns       │                  │                 │
+    │                 │    response      │                  │                 │
+    │                 │    status: 201   │                  │                 │
+    │                 │<─────────────────┤                  │                 │
+    │                 │                  │                  │                 │
+    │                 │ 8. Check status  │                  │                 │
+    │                 │    if !== 201    │                  │                 │
+    │                 │    → alert error │                  │                 │
+    │                 │                  │                  │                 │
+    │ Alert: "Login   │                  │                  │                 │
+    │ successful!"    │                  │                  │                 │
+    │<────────────────┤                  │                  │                 │
+    │                 │                  │                  │                 │
+    │                 │ 9. Store auth    │                  │                 │
+    │                 │    state         │                  │                 │
+    │                 ├──────────────────┼─────────────────>│                 │
+    │                 │ setItem("isAuthenticated", "true")  │                 │
+    │                 ├──────────────────┼─────────────────>│                 │
+    │                 │ setItem("username", this.username)  │                 │
+    │                 │                  │                  │                 │
+    │                 │ 10. loading=false│                  │                 │
+    │                 │                  │                  │                 │
+    │                 │ 11. Redirect to  │                  │                 │
+    │                 │     /profile     │                  │                 │
+    │                 ├──────────────────┼──────────────────┼────────────────>│
+    │                 │                  │                  │                 │
+    │                 │                  │                  │ 12. Navigate to │
+    │                 │                  │                  │     ProfileView │
+    │<────────────────┴──────────────────┴──────────────────┴─────────────────┤
+```
+
+#### 2. Authentication State Check (App.vue)
+
+```
+┌─────────────────────────────────────────────────────────────────────────────┐
+│                         App.vue - Navigation Bar                            │
+│                                                                             │
+│  When App.vue Loads:                                                        │
+│  ┌───────────────────────────────────────────────────────────────────────┐  │
+│  │  data() {                                                             │  │
+│  │    return {                                                           │  │
+│  │      isAuthenticated: localStorage.getItem("isAuthenticated")==="true"│  │
+│  │    }                                                                  │  │
+│  │  }                                                                    │  │
+│  └───────────────────────────────────────────────────────────────────────┘  │
+│                                                                             │
+│  Navigation Display Logic:                                                  │
+│  ┌───────────────────────────────────────────────────────────────────────┐  │
+│  │  <nav>                                                                │  │
+│  │    <RouterLink to="/">Go to Home</RouterLink>                         │  │
+│  │    <RouterLink to="/about">Go to About</RouterLink>                   │  │
+│  │                                                                       │  │
+│  │    <!-- Only show if authenticated -->                                │  │
+│  │    <RouterLink v-if="isAuthenticated" to="/products">                │  │
+│  │      Go to Products                                                   │  │
+│  │    </RouterLink>                                                      │  │
+│  │                                                                       │  │
+│  │    <RouterLink to="/login">Go to Login</RouterLink>                   │  │
+│  │                                                                       │  │
+│  │    <!-- Only show if authenticated -->                                │  │
+│  │    <RouterLink v-if="isAuthenticated" to="/profile">                 │  │
+│  │      Go to Profile                                                    │  │
+│  │    </RouterLink>                                                      │  │
+│  │  </nav>                                                               │  │
+│  └───────────────────────────────────────────────────────────────────────┘  │
+│                                                                             │
+│  Result Based on Authentication State:                                      │
+│                                                                             │
+│  ┌─ NOT AUTHENTICATED (isAuthenticated = false) ──────────────────────┐    │
+│  │                                                                     │    │
+│  │  Visible Links:                                                     │    │
+│  │  [Home] | [About] | [Login]                                         │    │
+│  │                                                                     │    │
+│  │  Hidden Links:                                                      │    │
+│  │  Products ❌   Profile ❌                                            │    │
+│  └─────────────────────────────────────────────────────────────────────┘    │
+│                                                                             │
+│  ┌─ AUTHENTICATED (isAuthenticated = true) ────────────────────────────┐    │
+│  │                                                                     │    │
+│  │  Visible Links:                                                     │    │
+│  │  [Home] | [About] | [Products] | [Login] | [Profile]               │    │
+│  │                                                                     │    │
+│  └─────────────────────────────────────────────────────────────────────┘    │
+└─────────────────────────────────────────────────────────────────────────────┘
+```
+
+#### 3. Profile View and Logout Flow
+
+```
+┌────────┐        ┌──────────────────┐        ┌──────────────┐        ┌────────┐
+│  User  │        │  ProfileView.vue │        │ localStorage │        │ Router │
+└───┬────┘        └────────┬─────────┘        └──────┬───────┘        └───┬────┘
+    │                      │                         │                    │
+    │ 1. Navigate to       │                         │                    │
+    │    /profile          │                         │                    │
+    ├─────────────────────>│                         │                    │
+    │                      │                         │                    │
+    │                      │ 2. Load profile data    │                    │
+    │                      │    from localStorage    │                    │
+    │                      ├────────────────────────>│                    │
+    │                      │                         │                    │
+    │                      │ 3. Get username         │                    │
+    │                      │<────────────────────────┤                    │
+    │                      │                         │                    │
+    │                      │ data() {                │                    │
+    │                      │   username: localStorage│                    │
+    │                      │     .getItem("username")│                    │
+    │                      │ }                       │                    │
+    │                      │                         │                    │
+    │ 4. Display profile   │                         │                    │
+    │    page with welcome │                         │                    │
+    │    message           │                         │                    │
+    │<─────────────────────┤                         │                    │
+    │                      │                         │                    │
+    │  ┌────────────────┐  │                         │                    │
+    │  │ Profile Page   │  │                         │                    │
+    │  │                │  │                         │                    │
+    │  │ Welcome,       │  │                         │                    │
+    │  │ john_doe!      │  │                         │                    │
+    │  │                │  │                         │                    │
+    │  │ [Logout]       │  │                         │                    │
+    │  └────────────────┘  │                         │                    │
+    │                      │                         │                    │
+    │ 5. Click Logout      │                         │                    │
+    │      button          │                         │                    │
+    ├─────────────────────>│                         │                    │
+    │                      │                         │                    │
+    │                      │ 6. handleLogout() called│                    │
+    │                      │                         │                    │
+    │                      │ 7. Remove auth data     │                    │
+    │                      ├────────────────────────>│                    │
+    │                      │ removeItem("isAuthenticated")                │
+    │                      ├────────────────────────>│                    │
+    │                      │ removeItem("username")  │                    │
+    │                      │                         │                    │
+    │                      │ 8. Reset local state    │                    │
+    │                      │    username =           │                    │
+    │                      │    "Not logged in"      │                    │
+    │                      │                         │                    │
+    │                      │ 9. Redirect to home     │                    │
+    │                      ├─────────────────────────┼───────────────────>│
+    │                      │    router.push("/")     │                    │
+    │                      │                         │                    │
+    │ 10. Navigate to      │                         │                    │
+    │     home page        │                         │                    │
+    │<─────────────────────┴─────────────────────────┴────────────────────┤
+```
+
+#### 4. localStorage State Diagram
+
+```
+┌─────────────────────────────────────────────────────────────────────────────┐
+│                          localStorage State                                 │
+│                                                                             │
+│  ┌─────────────────────────┐                ┌─────────────────────────┐     │
+│  │   LOGGED OUT STATE      │                │   LOGGED IN STATE        │     │
+│  │  ┌───────────────────┐  │                │  ┌───────────────────┐  │     │
+│  │  │  localStorage:    │  │                │  │  localStorage:    │  │     │
+│  │  │                   │  │                │  │                   │  │     │
+│  │  │  (empty)          │  │   Login with   │  │  isAuthenticated: │  │     │
+│  │  │    OR             │◄─┼────Successful──┼──┤  "true"           │  │     │
+│  │  │  isAuthenticated: │  │   Credentials  │  │                   │  │     │
+│  │  │  null/undefined   │  │                │  │  username:        │  │     │
+│  │  │                   │  │                │  │  "john_doe"       │  │     │
+│  │  │  username:        │  │                │  │                   │  │     │
+│  │  │  null/undefined   │  │                │  └───────────────────┘  │     │
+│  │  └───────────────────┘  │                │                         │     │
+│  │                         │                │  Navigation Links:       │     │
+│  │  Navigation Links:      │                │  ✅ Home                 │     │
+│  │  ✅ Home                │   Logout       │  ✅ About                │     │
+│  │  ✅ About               │   Button       │  ✅ Login                │     │
+│  │  ✅ Login               │   Clicked      │  ✅ Products             │     │
+│  │  ❌ Products            │                │  ✅ Profile              │     │
+│  │  ❌ Profile             │◄───────────────┤                         │     │
+│  │                         │                │  Available Pages:        │     │
+│  │  Available Pages:       │                │  • View product list     │     │
+│  │  • Home page only       │                │  • Add/edit/delete       │     │
+│  │  • About page           │                │  • View profile          │     │
+│  │  • Login page           │                │  • Logout                │     │
+│  └─────────────────────────┘                └─────────────────────────┘     │
+└─────────────────────────────────────────────────────────────────────────────┘
+```
+
+#### 5. Complete Application Flow with Authentication
+
+```
+                              User Opens Application
+                                       │
+                                       v
+                        ┌──────────────────────────────┐
+                        │  App.vue Loads               │
+                        │  Check localStorage          │
+                        │  for "isAuthenticated"       │
+                        └──────────┬───────────────────┘
+                                   │
+                ┌──────────────────┴──────────────────┐
+                │                                     │
+                v                                     v
+    ┌─────────────────────┐              ┌─────────────────────┐
+    │ Not Authenticated   │              │  Authenticated      │
+    │ (null or "false")   │              │  ("true")           │
+    └──────────┬──────────┘              └──────────┬──────────┘
+               │                                    │
+               │                                    │
+               v                                    v
+    ┌─────────────────────┐              ┌─────────────────────┐
+    │ Show Limited Nav:   │              │ Show Full Nav:      │
+    │ • Home              │              │ • Home              │
+    │ • About             │              │ • About             │
+    │ • Login             │              │ • Products X        │
+    │                     │              │ • Login             │
+    └──────────┬──────────┘              │ • Profile X         │
+               │                         └──────────┬──────────┘
+               │                                    │
+               │ User clicks Login                  │ User browses app
+               v                                    v
+    ┌─────────────────────┐              ┌─────────────────────┐
+    │  LoginView          │              │ Can access:         │
+    │  • Enter username   │              │ • ProductView       │
+    │  • Enter password   │              │ • ProfileView       │
+    │  • Submit form      │              │ • All features      │
+    └──────────┬──────────┘              └──────────┬──────────┘
+               │                                    │
+               │ Call loginUser()                   │
+               v                                    │
+    ┌─────────────────────┐                         │
+    │ authApi.js          │                         │
+    │ POST /auth/login    │                         │
+    └──────────┬──────────┘                         │
+               │                                    │
+         ┌─────┴─────┐                              │
+         │           │                              │
+    Success      Failure                            │
+    (201)      (4xx/5xx)                            │
+         │           │                              │
+         │           v                              │
+         │    ┌────────────┐                        │
+         │    │Show alert: │                        │
+         │    │"Login      │                        │
+         │    │ failed"    │                        │
+         │    └────────────┘                        │
+         │                                          │
+         v                                          │
+    ┌─────────────────────┐                         │
+    │ Save to localStorage│                         │
+    │ • isAuthenticated   │                         │
+    │ • username          │                         │
+    └──────────┬──────────┘                         │
+               │                                    │
+               │ router.push("/profile")            │
+               │                                    │
+               └───────────────────┬────────────────┘
+                                   │
+                                   v
+                        ┌──────────────────────────┐
+                        │  ProfileView             │
+                        │  • Show welcome message  │
+                        │  • Show username         │
+                        │  • Show logout button    │
+                        └──────────┬───────────────┘
+                                   │
+                                   │ User clicks Logout
+                                   v
+                        ┌──────────────────────────┐
+                        │  handleLogout()          │
+                        │  • Clear localStorage    │
+                        │  • Reset state           │
+                        │  • Redirect to home      │
+                        └──────────┬───────────────┘
+                                   │
+                                   v
+                        ┌──────────────────────────┐
+                        │  Back to Not             │
+                        │  Authenticated State     │
+                        └──────────────────────────┘
+```
+
+### Data Flow Summary
+
+```text
+┌─────────────┐         ┌──────────────┐         ┌─────────────┐
+│  Component  │────────>│ localStorage │────────>│  Component  │
+│  (Write)    │  Store  │   (Persist)  │  Read   │   (Read)    │
+│             │         │              │         │             │
+│ LoginView   │         │ • isAuth     │         │ App.vue     │
+│ ProfileView │         │ • username   │         │ ProfileView │
+└─────────────┘         └──────────────┘         └─────────────┘
+      │                                                 │
+      │                                                 │
+      └──────────────────── No Direct ──────────────────┘
+                         Communication
+```
+
+**Important:** Components don't communicate directly. They use localStorage as a shared state store.
+
+### Authozation and Route Guards
+
+This guide explains how to implement **Role-Based Access Control (RBAC)** for Vue Router to protect routes based on user roles (User vs Admin).
+
+### Requirements
+
+- **User Role**: Can access Profile and Products pages
+- **Admin Role**: Can access Profile, Products, and Admin Panel
+- **Guest (Not Authenticated)**: Can only access Home, About, and Login pages
+
+## Current System Analysis
+
+### Current localStorage Structure
+
+```javascript
+localStorage: {
+  isAuthenticated: "true" | "false",
+  username: "john_doe",
+  isAdmin: "true" | "false"  // Already implemented in LoginView
+}
+```
+
+### User Roles
+
+| Role | isAuthenticated | isAdmin | Access |
+|------|----------------|---------|--------|
+| **Guest** | false | - | Home, About, Login |
+| **User** | true | false | Home, About, Login, **Profile**, **Products** |
+| **Admin** | true | true | Home, About, Login, Profile, Products, **Admin Panel** |
+
+## Implementation Plan
+
+### Step 1: Add Route Metadata
+
+Add `meta` fields to routes to specify access requirements.
+
+```javascript
+// router/index.js
+const routes = [
+  // Public routes - no authentication needed
+  {
+    path: "/",
+    component: HomeView,
+    meta: { requiresAuth: false }
+  },
+  {
+    path: "/about",
+    component: AboutView,
+    meta: { requiresAuth: false }
+  },
+  {
+    path: "/login",
+    component: LoginView,
+    meta: { requiresAuth: false }
+  },
+
+  // User routes - requires authentication
+  {
+    path: "/profile",
+    component: ProfileView,
+    meta: { requiresAuth: true, requiresAdmin: false }
+  },
+  {
+    path: "/products",
+    component: ProductView,
+    meta: { requiresAuth: true, requiresAdmin: false }
+  },
+
+  // Admin routes - requires admin role
+  {
+    path: "/admin",
+    component: AdminView,
+    meta: { requiresAuth: true, requiresAdmin: true }
+  },
+];
+```
+
+### Step 2: Create Navigation Guard
+
+Add a `beforeEach` guard to check authentication and authorization before navigating.
+
+```javascript
+// router/index.js
+router.beforeEach((to, from, next) => {
+  // Get auth state from localStorage
+  const isAuthenticated = localStorage.getItem('isAuthenticated') === 'true';
+  const isAdmin = localStorage.getItem('isAdmin') === 'true';
+
+  // Check if route requires authentication
+  const requiresAuth = to.meta.requiresAuth;
+  const requiresAdmin = to.meta.requiresAdmin;
+
+  // Route logic
+  if (requiresAuth && !isAuthenticated) {
+    // Redirect to login if not authenticated
+    alert('Please login to access this page');
+    next('/login');
+  } else if (requiresAdmin && !isAdmin) {
+    // Redirect if trying to access admin page without admin role
+    alert('Access denied. Admin privileges required.');
+    next('/');
+  } else {
+    // Allow navigation
+    next();
+  }
+});
+```
+
+## Complete Flow Diagrams
+
+### 1. Route Guard Decision Flow
+
+```
+                        User Navigates to Route
+                                 |
+                                 v
+                    ┌────────────────────────┐
+                    │ to.meta.requiresAuth?  │
+                    └────────┬───────────────┘
+                             |
+                ┌────────────┴─────────────┐
+                |                          |
+               YES                        NO
+                |                          |
+                v                          v
+    ┌──────────────────────┐    ┌─────────────────┐
+    │ isAuthenticated?     │    │ Allow Access    │
+    └──────┬───────────────┘    └─────────────────┘
+           |
+    ┌──────┴───────┐
+    |              |
+   YES            NO
+    |              |
+    v              v
+┌───────────────┐  ┌─────────────────────────┐
+│Check if needs │  │ Alert: "Please login"   │
+│admin role     │  │ Redirect to /login      │
+└───┬───────────┘  └─────────────────────────┘
+    |
+    v
+┌─────────────────────┐
+│to.meta.requiresAdmin│
+└─────┬───────────────┘
+      |
+  ┌───┴────┐
+  |        |
+ YES      NO
+  |        |
+  v        v
+┌────────┐ ┌──────────────┐
+│isAdmin?│ │Allow Access  │
+└───┬────┘ └──────────────┘
+    |
+┌───┴───┐
+|       |
+YES    NO
+|       |
+v       v
+┌──────────┐ ┌────────────────────────┐
+│Allow     │ │Alert: "Access denied"  │
+│Access    │ │Redirect to /           │
+└──────────┘ └────────────────────────┘
+```
+
+### 2. User Access Matrix
+
+```
+┌─────────────────────────────────────────────────────────────────────────┐
+│                         Route Access Matrix                             │
+├─────────────┬──────────┬───────────┬──────────────┬─────────────────────┤
+│   Route     │  Guest   │   User    │    Admin     │   Redirect If Fail  │
+├─────────────┼──────────┼───────────┼──────────────┼─────────────────────┤
+│ /           │    ✅    │    ✅     │     ✅       │         -           │
+│ /about      │    ✅    │    ✅     │     ✅       │         -           │
+│ /login      │    ✅    │    ✅     │     ✅       │         -           │
+│ /profile    │    ❌    │    ✅     │     ✅       │    → /login         │
+│ /products   │    ❌    │    ✅     │     ✅       │    → /login         │
+│ /admin      │    ❌    │    ❌     │     ✅       │ → /login or /       │
+└─────────────┴──────────┴───────────┴──────────────┴─────────────────────┘
+```
+
+### 3. Complete Authentication & Authorization Flow
+
+```
+┌──────────┐
+│  User    │
+└────┬─────┘
+     │
+     │ 1. Navigate to /products
+     v
+┌─────────────────────────────────────────────────────────────┐
+│              Router beforeEach Guard                        │
+│                                                             │
+│  Step 1: Read from localStorage                             │
+│  ┌───────────────────────────────────────────────────────┐  │
+│  │ const isAuthenticated =                               │  │
+│  │   localStorage.getItem('isAuthenticated') === 'true'  │  │
+│  │ const isAdmin =                                       │  │
+│  │   localStorage.getItem('isAdmin') === 'true'          │  │
+│  └───────────────────────────────────────────────────────┘  │
+│                                                             │
+│  Step 2: Check route requirements                           │
+│  ┌───────────────────────────────────────────────────────┐  │
+│  │ requiresAuth = to.meta.requiresAuth  // true          │  │
+│  │ requiresAdmin = to.meta.requiresAdmin // false        │  │
+│  └───────────────────────────────────────────────────────┘  │
+│                                                             │
+│  Step 3: Evaluate conditions                                │
+│  ┌───────────────────────────────────────────────────────┐  │
+│  │ if (requiresAuth && !isAuthenticated)                 │  │
+│  │   → Deny + Redirect to /login                         │  │
+│  │                                                       │  │
+│  │ else if (requiresAdmin && !isAdmin)                   │  │
+│  │   → Deny + Redirect to /                              │  │
+│  │                                                       │  │
+│  │ else                                                  │  │
+│  │   → Allow navigation (next())                         │  │
+│  └───────────────────────────────────────────────────────┘  │
+└─────────────────────────────────────────────────────────────┘
+     │
+     v
+┌─────────────────────────────────────────────────────────────┐
+│                    Decision Result                          │
+└─────────────────────────────────────────────────────────────┘
+     │
+     ┼─────────────────┬─────────────────────┬────────────────
+     │                 │                     │
+     v                 v                     v
+┌──────────┐    ┌────────────┐      ┌──────────────┐
+│ Allowed  │    │ Not Auth   │      │ Not Admin    │
+│ Navigate │    │ Redirect   │      │ Redirect     │
+│ to route │    │ to /login  │      │ to /         │
+└──────────┘    └────────────┘      └──────────────┘
+```
