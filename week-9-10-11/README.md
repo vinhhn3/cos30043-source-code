@@ -1172,3 +1172,1319 @@ v       v
 │ to route │    │ to /login  │      │ to /         │
 └──────────┘    └────────────┘      └──────────────┘
 ```
+
+## Vuex State Management
+
+### 🎓 Welcome to Vuex - Your Central Data Store
+
+Think of Vuex as a **big treasure chest** 🗃️ that holds all your app's important data in one place. Instead of passing data between components like passing notes in class, all components can access this central chest whenever they need something!
+
+### 📚 Why Do We Need Vuex?
+
+#### The Problem Without Vuex
+
+Imagine you have a shopping cart app:
+
+```
+                 App.vue (has cart data)
+                    |
+        ┌───────────┼───────────┐
+        |           |           |
+    Header       Products    Checkout
+    (shows      (adds to     (displays
+     count)      cart)         cart)
+```
+
+**Problems:**
+
+1. 😫 Cart data lives in App.vue, but 3 components need it
+2. 😫 Need to pass props down multiple levels
+3. 😫 Need to emit events up multiple levels
+4. 😫 Components can't easily "talk" to each other
+
+#### The Solution With Vuex
+
+```
+         ┌─────────────────────────┐
+         │   VUEX STORE (Center)   │
+         │   cart: []              │
+         │   user: {}              │
+         │   products: []          │
+         └────────┬────────────────┘
+                  │
+    ┌─────────────┼─────────────┐
+    │             │             │
+  Header      Products      Checkout
+  (reads      (adds to      (reads
+   count)      cart)         cart)
+```
+
+**Benefits:**
+
+1. ✅ One central place for data
+2. ✅ Any component can access data directly
+3. ✅ No more "prop drilling" (passing props through many levels)
+4. ✅ Data changes automatically update everywhere
+
+---
+
+## 🏗️ The Four Core Concepts of Vuex
+
+Think of Vuex like a **bank system**:
+
+```
+┌─────────────────────────────────────────────────────────────────┐
+│                         VUEX STORE                              │
+│                      (The Bank Building)                        │
+│                                                                 │
+│  ┌──────────────┐    ┌──────────────┐    ┌─────────────────┐    │
+│  │   STATE      │    │   GETTERS    │    │    MUTATIONS    │    │
+│  │  (Vault)     │    │ (Teller)     │    │  (Deposit Slip) │    │
+│  │              │    │              │    │                 │    │
+│  │ The actual   │    │ Read & calc  │    │ Change the      │    │
+│  │ data storage │    │ data for you │    │ vault (sync)    │    │
+│  └──────────────┘    └──────────────┘    └─────────────────┘    │
+│                                                                 │
+│  ┌──────────────────────────────────────────────────────────┐   │
+│  │                    ACTIONS                               │   │
+│  │                  (Bank Manager)                          │   │
+│  │                                                          │   │
+│  │  Handle complex operations, API calls (async)            │   │
+│  │  Then commits mutations to change state                  │   │
+│  └──────────────────────────────────────────────────────────┘   │
+└─────────────────────────────────────────────────────────────────┘
+```
+
+### 1️⃣ State - The Data Warehouse
+
+**State** is where all your data lives. It's like variables but shared across your entire app.
+
+```javascript
+// store/index.js
+const store = createStore({
+  state() {
+    return {
+      // Think of these as global variables
+      products: [],
+      cart: [],
+      user: {
+        username: '',
+        isAuthenticated: false
+      },
+      loading: false
+    }
+  }
+})
+```
+
+**Real-Life Analogy:**
+State is like your bank vault 🏦 - it stores all the money (data).
+
+**Key Rules:**
+
+- ❌ NEVER modify state directly: `store.state.cart = []` ❌
+- ✅ ALWAYS use mutations: `store.commit('clearCart')` ✅
+
+---
+
+### 2️⃣ Getters - The Smart Calculators
+
+**Getters** are like computed properties for your store. They read state and calculate something from it.
+
+```javascript
+const store = createStore({
+  state() {
+    return {
+      cart: [
+        { id: 1, name: 'Shirt', price: 20 },
+        { id: 2, name: 'Pants', price: 40 }
+      ]
+    }
+  },
+
+  getters: {
+    // Get cart total price
+    cartTotal(state) {
+      return state.cart.reduce((total, item) => total + item.price, 0)
+      // Returns: 60
+    },
+
+    // Get number of items in cart
+    cartItemCount(state) {
+      return state.cart.length
+      // Returns: 2
+    },
+
+    // Get expensive items (over $30)
+    expensiveItems(state) {
+      return state.cart.filter(item => item.price > 30)
+      // Returns: [{ id: 2, name: 'Pants', price: 40 }]
+    },
+
+    // Getter that returns a function (with parameters)
+    getProductById: (state) => (id) => {
+      return state.products.find(product => product.id === id)
+    }
+  }
+})
+```
+
+**Real-Life Analogy:**
+Getters are like a **bank teller** 💁 - they look at your account and tell you your balance, calculate interest, etc. They don't change your money, just read and calculate.
+
+**When to Use Getters:**
+
+- ✅ Calculate totals, counts, averages
+- ✅ Filter data (show only active users)
+- ✅ Format data (convert prices to currency)
+- ✅ Derive new data from existing state
+
+---
+
+### 3️⃣ Mutations - The Only Way to Change State
+
+**Mutations** are the ONLY way to modify state. They must be **synchronous** (instant, no waiting).
+
+```javascript
+const store = createStore({
+  state() {
+    return {
+      cart: [],
+      products: []
+    }
+  },
+
+  mutations: {
+    // Add item to cart
+    ADD_TO_CART(state, product) {
+      //    ↑       ↑        ↑
+      //  name    state    payload
+      state.cart.push(product)
+    },
+
+    // Remove item from cart
+    REMOVE_FROM_CART(state, productId) {
+      state.cart = state.cart.filter(item => item.id !== productId)
+    },
+
+    // Clear entire cart
+    CLEAR_CART(state) {
+      state.cart = []
+    },
+
+    // Set products (replace entire array)
+    SET_PRODUCTS(state, products) {
+      state.products = products
+    },
+
+    // Update single product
+    UPDATE_PRODUCT(state, updatedProduct) {
+      const index = state.products.findIndex(p => p.id === updatedProduct.id)
+      if (index !== -1) {
+        state.products[index] = updatedProduct
+      }
+    }
+  }
+})
+```
+
+**Real-Life Analogy:**
+Mutations are like **deposit/withdrawal slips** 📝 at a bank - they're the official forms to change your balance. Every change must use a form (mutation).
+
+**Naming Convention:**
+
+- Use UPPERCASE_SNAKE_CASE: `ADD_PRODUCT`, `SET_USER`, `CLEAR_CART`
+- This helps identify mutations at a glance
+
+**How to Call Mutations:**
+
+```javascript
+// In a component
+methods: {
+  addProduct() {
+    // Commit a mutation
+    this.$store.commit('ADD_TO_CART', product)
+    //              ↑                    ↑
+    //          mutation name        payload (data)
+  }
+}
+```
+
+**⚠️ Important Rules:**
+
+- ✅ Must be synchronous (no `await`, no `setTimeout`)
+- ✅ Only mutations can change state
+- ✅ Keep them simple - just change state, no complex logic
+
+---
+
+### 4️⃣ Actions - The Smart Workers
+
+**Actions** handle complex operations and API calls. They can be **asynchronous** (can wait for things).
+
+```javascript
+const store = createStore({
+  state() {
+    return {
+      products: [],
+      loading: false,
+      error: null
+    }
+  },
+
+  mutations: {
+    SET_LOADING(state, status) {
+      state.loading = status
+    },
+    SET_PRODUCTS(state, products) {
+      state.products = products
+    },
+    SET_ERROR(state, error) {
+      state.error = error
+    }
+  },
+
+  actions: {
+    // Fetch products from API
+    async fetchProducts({ commit }) {
+      //                    ↑
+      //                 context object (has commit, state, etc.)
+
+      try {
+        // 1. Show loading
+        commit('SET_LOADING', true)
+
+        // 2. Make API call (ASYNC - can use await!)
+        const response = await axios.get('https://fakestoreapi.com/products')
+
+        // 3. Save data using mutation
+        commit('SET_PRODUCTS', response.data)
+
+        // 4. Hide loading
+        commit('SET_LOADING', false)
+
+      } catch (error) {
+        // Handle errors
+        commit('SET_ERROR', error.message)
+        commit('SET_LOADING', false)
+      }
+    },
+
+    // Add product (with API call)
+    async addProduct({ commit }, productData) {
+      //                          ↑
+      //                      payload
+
+      const response = await axios.post('/api/products', productData)
+      commit('ADD_PRODUCT', response.data)
+    },
+
+    // Action can call other actions
+    async loadAllData({ dispatch }) {
+      //                   ↑
+      //               use dispatch for actions
+      await dispatch('fetchProducts')
+      await dispatch('fetchCategories')
+      await dispatch('fetchUser')
+    }
+  }
+})
+```
+
+**Real-Life Analogy:**
+Actions are like **bank managers** 👔 - they handle complex tasks (loan applications, transferring money between accounts), work with other departments (API calls), and then update records using official forms (commit mutations).
+
+**How to Call Actions:**
+
+```javascript
+// In a component
+methods: {
+  async loadProducts() {
+    // Dispatch an action
+    await this.$store.dispatch('fetchProducts')
+    //                   ↑
+    //              action name
+  },
+
+  async addNewProduct() {
+    await this.$store.dispatch('addProduct', this.productData)
+    //                                        ↑
+    //                                     payload
+  }
+}
+```
+
+**Actions vs Mutations:**
+
+| Feature | Mutations | Actions |
+|---------|-----------|---------|
+| **Can be async?** | ❌ No (must be instant) | ✅ Yes (can use `await`) |
+| **API calls?** | ❌ No | ✅ Yes |
+| **Change state?** | ✅ Yes (directly) | ❌ No (must commit mutations) |
+| **Complex logic?** | ❌ No (keep simple) | ✅ Yes |
+| **Call with** | `commit()` | `dispatch()` |
+
+---
+
+## 🎯 Complete Vuex Flow Diagram
+
+Here's how everything works together:
+
+```
+┌──────────────────────────────────────────────────────────────────────┐
+│                          COMPONENT                                   │
+│                      (Vue Component File)                            │
+│                                                                      │
+│  ┌────────────────────────────────────────────────────────────────┐  │
+│  │  <template>                                                    │  │
+│  │    <div>                                                       │  │
+│  │      <h2>Cart Total: {{ cartTotal }}</h2>  ←─── 1. READ       │  │
+│  │      <button @click="fetchProducts">Load</button>              │  │
+│  │    </div>                                                      │  │
+│  │  </template>                                                   │  │
+│  │                                                                │  │
+│  │  <script>                                                      │  │
+│  │  export default {                                              │  │
+│  │    computed: {                                                 │  │
+│  │      cartTotal() {                                             │  │
+│  │        return this.$store.getters.cartTotal ←─── 1. READ      │  │
+│  │      }                                                         │  │
+│  │    },                                                          │  │
+│  │    methods: {                                                  │  │
+│  │      async fetchProducts() {                                   │  │
+│  │        await this.$store.dispatch('fetchProducts') ←── 2. CALL│  │
+│  │      }                                                         │  │
+│  │    }                                                           │  │
+│  │  }                                                             │  │
+│  │  </script>                                                     │  │
+│  └────────────────────────────────────────────────────────────────┘  │
+└────────────────────────┬──────────────────┬──────────────────────────┘
+                         │                  │
+                1. Read State/Getters   2. Dispatch Action
+                         │                  │
+                         ↓                  ↓
+┌─────────────────────────────────────────────────────────────────────┐
+│                          VUEX STORE                                 │
+│                                                                     │
+│  ┌──────────────────────────────────────────────────────────────┐   │
+│  │  STATE (The Data)                                            │   │
+│  │  ┌────────────────────────────────────────────────────────┐  │   │
+│  │  │  {                                                      │  │   │
+│  │  │    products: [...],                                    │  │   │
+│  │  │    cart: [...],                                        │  │   │
+│  │  │    user: {...}                                         │  │   │
+│  │  │  }                                                      │  │   │
+│  │  └────────────────────────────────────────────────────────┘  │   │
+│  └──────────────────────┬───────────────────────────────────────┘   │
+│                         │                                           │
+│                         │ 1. Components read from here              │
+│                         │                                           │
+│  ┌──────────────────────┴───────────────────────────────────────┐   │
+│  │  GETTERS (Computed State)                                    │   │
+│  │  ┌────────────────────────────────────────────────────────┐  │   │
+│  │  │  cartTotal(state) {                                    │  │   │
+│  │  │    return state.cart.reduce(...)                       │  │   │
+│  │  │  }                                                      │  │   │
+│  │  └────────────────────────────────────────────────────────┘  │   │
+│  └──────────────────────────────────────────────────────────────┘   │
+│                                                                     │
+│  ┌──────────────────────────────────────────────────────────────┐   │
+│  │  ACTIONS (Async Operations)                    2. Called     │   │
+│  │  ┌────────────────────────────────────────────────────────┐  │   │
+│  │  │  async fetchProducts({ commit }) {                     │  │   │
+│  │  │    const data = await api.getProducts() ───┐           │  │   │
+│  │  │                                             │ API call  │  │   │
+│  │  │    commit('SET_PRODUCTS', data) ─┐          │           │  │   │
+│  │  │  }                                └────┐    │           │  │   │
+│  │  └───────────────────────────────────────┼────┼─────────┘  │   │
+│  └────────────────────────────────────────────┼────┼──────────┘   │
+│                                               │    │              │
+│                                      3. Commits│    │              │
+│                                           Mutation  │              │
+│                                               ↓    ↓              │
+│  ┌──────────────────────────────────────────────────────────────┐   │
+│  │  MUTATIONS (Synchronous State Changes)                       │   │
+│  │  ┌────────────────────────────────────────────────────────┐  │   │
+│  │  │  SET_PRODUCTS(state, products) {                       │  │   │
+│  │  │    state.products = products ──┐                       │  │   │
+│  │  │  }                              │ 4. Updates state     │  │   │
+│  │  └─────────────────────────────────┼──────────────────────┘  │   │
+│  └──────────────────────────────────────┼─────────────────────────│   │
+│                                         │                         │
+│                                         ↓                         │
+│                            State is now updated!                  │
+│                                         │                         │
+└─────────────────────────────────────────┼─────────────────────────┘
+                                          │
+                            5. Vue reactivity notifies
+                                          │
+                                          ↓
+                        ┌─────────────────────────────────┐
+                        │    COMPONENT AUTO-UPDATES       │
+                        │    (UI refreshes automatically) │
+                        └─────────────────────────────────┘
+```
+
+**The Complete Flow:**
+
+1. **Component** dispatches an action: `dispatch('fetchProducts')`
+2. **Action** calls API (async) and gets data
+3. **Action** commits a mutation: `commit('SET_PRODUCTS', data)`
+4. **Mutation** updates the state
+5. **State change** triggers Vue's reactivity
+6. **Component** automatically re-renders with new data!
+
+---
+
+## 🛠️ Setting Up Vuex in Your Project
+
+### Step 1: Install Vuex
+
+```bash
+npm install vuex@next --save
+```
+
+The `@next` tag installs Vuex 4, which works with Vue 3.
+
+### Step 2: Create Store File
+
+Create `src/store/index.js`:
+
+```javascript
+// src/store/index.js
+import { createStore } from 'vuex'
+
+const store = createStore({
+  state() {
+    return {
+      // Your data goes here
+      products: [],
+      cart: [],
+      user: {
+        username: '',
+        isAuthenticated: false,
+        isAdmin: false
+      }
+    }
+  },
+
+  getters: {
+    // Your computed properties go here
+  },
+
+  mutations: {
+    // Your state changes go here
+  },
+
+  actions: {
+    // Your async operations go here
+  }
+})
+
+export default store
+```
+
+### Step 3: Connect Store to App
+
+Update `src/main.js`:
+
+```javascript
+// src/main.js
+import { createApp } from 'vue'
+import App from './App.vue'
+import router from './router'
+import store from './store'  // ← Import store
+
+const app = createApp(App)
+
+app.use(router)
+app.use(store)  // ← Add this line
+
+app.mount('#app')
+```
+
+### Step 4: Use Store in Components
+
+Now you can access the store in any component:
+
+```vue
+<template>
+  <div>
+    <!-- Read from state -->
+    <h1>Welcome, {{ username }}</h1>
+    <p>Cart Items: {{ cartItemCount }}</p>
+
+    <button @click="loadProducts">Load Products</button>
+  </div>
+</template>
+
+<script>
+export default {
+  computed: {
+    // Access state directly
+    username() {
+      return this.$store.state.user.username
+    },
+
+    // Access getters
+    cartItemCount() {
+      return this.$store.getters.cartItemCount
+    }
+  },
+
+  methods: {
+    // Dispatch actions
+    async loadProducts() {
+      await this.$store.dispatch('fetchProducts')
+    },
+
+    // Commit mutations (rarely done directly)
+    clearCart() {
+      this.$store.commit('CLEAR_CART')
+    }
+  }
+}
+</script>
+```
+
+---
+
+## 📝 Real Example: Product Management with Vuex
+
+Let's build a complete product management system using Vuex!
+
+### Complete Store Implementation
+
+```javascript
+// src/store/index.js
+import { createStore } from 'vuex'
+import axios from 'axios'
+
+const API_BASE = 'https://fakestoreapi.com'
+
+const store = createStore({
+  //─────────────────────────────────────────────────────
+  // STATE - The single source of truth
+  //─────────────────────────────────────────────────────
+  state() {
+    return {
+      products: [],
+      loading: false,
+      error: null,
+      user: {
+        username: localStorage.getItem('username') || '',
+        isAuthenticated: localStorage.getItem('isAuthenticated') === 'true',
+        isAdmin: localStorage.getItem('isAdmin') === 'true'
+      }
+    }
+  },
+
+  //─────────────────────────────────────────────────────
+  // GETTERS - Computed state
+  //─────────────────────────────────────────────────────
+  getters: {
+    // Get all products
+    allProducts(state) {
+      return state.products
+    },
+
+    // Get number of products
+    productCount(state) {
+      return state.products.length
+    },
+
+    // Get products by category
+    productsByCategory: (state) => (category) => {
+      return state.products.filter(p => p.category === category)
+    },
+
+    // Get expensive products (over $50)
+    expensiveProducts(state) {
+      return state.products.filter(p => p.price > 50)
+    },
+
+    // Check if loading
+    isLoading(state) {
+      return state.loading
+    },
+
+    // Check if authenticated
+    isAuthenticated(state) {
+      return state.user.isAuthenticated
+    },
+
+    // Get username
+    username(state) {
+      return state.user.username
+    }
+  },
+
+  //─────────────────────────────────────────────────────
+  // MUTATIONS - Synchronous state changes
+  //─────────────────────────────────────────────────────
+  mutations: {
+    // Set all products
+    SET_PRODUCTS(state, products) {
+      state.products = products
+    },
+
+    // Add a new product
+    ADD_PRODUCT(state, product) {
+      state.products.push(product)
+    },
+
+    // Update a product
+    UPDATE_PRODUCT(state, updatedProduct) {
+      const index = state.products.findIndex(p => p.id === updatedProduct.id)
+      if (index !== -1) {
+        // Replace old product with updated one
+        state.products.splice(index, 1, updatedProduct)
+      }
+    },
+
+    // Delete a product
+    DELETE_PRODUCT(state, productId) {
+      state.products = state.products.filter(p => p.id !== productId)
+    },
+
+    // Set loading status
+    SET_LOADING(state, status) {
+      state.loading = status
+    },
+
+    // Set error
+    SET_ERROR(state, error) {
+      state.error = error
+    },
+
+    // Clear error
+    CLEAR_ERROR(state) {
+      state.error = null
+    },
+
+    // Set user (login)
+    SET_USER(state, userData) {
+      state.user.username = userData.username
+      state.user.isAuthenticated = true
+      state.user.isAdmin = userData.isAdmin || false
+
+      // Also save to localStorage
+      localStorage.setItem('username', userData.username)
+      localStorage.setItem('isAuthenticated', 'true')
+      localStorage.setItem('isAdmin', userData.isAdmin || 'false')
+    },
+
+    // Clear user (logout)
+    CLEAR_USER(state) {
+      state.user.username = ''
+      state.user.isAuthenticated = false
+      state.user.isAdmin = false
+
+      // Remove from localStorage
+      localStorage.removeItem('username')
+      localStorage.removeItem('isAuthenticated')
+      localStorage.removeItem('isAdmin')
+    }
+  },
+
+  //─────────────────────────────────────────────────────
+  // ACTIONS - Asynchronous operations
+  //─────────────────────────────────────────────────────
+  actions: {
+    // Fetch all products from API
+    async fetchProducts({ commit }) {
+      try {
+        commit('SET_LOADING', true)
+        commit('CLEAR_ERROR')
+
+        const response = await axios.get(`${API_BASE}/products`)
+        commit('SET_PRODUCTS', response.data)
+
+      } catch (error) {
+        commit('SET_ERROR', error.message)
+        console.error('Error fetching products:', error)
+      } finally {
+        commit('SET_LOADING', false)
+      }
+    },
+
+    // Create a new product
+    async createProduct({ commit }, productData) {
+      try {
+        commit('SET_LOADING', true)
+
+        const response = await axios.post(`${API_BASE}/products`, productData)
+        commit('ADD_PRODUCT', response.data)
+
+        return response.data // Return for component to use
+
+      } catch (error) {
+        commit('SET_ERROR', error.message)
+        throw error // Re-throw so component can handle
+      } finally {
+        commit('SET_LOADING', false)
+      }
+    },
+
+    // Update a product
+    async updateProduct({ commit }, { id, productData }) {
+      try {
+        commit('SET_LOADING', true)
+
+        const response = await axios.put(`${API_BASE}/products/${id}`, productData)
+        commit('UPDATE_PRODUCT', response.data)
+
+        return response.data
+
+      } catch (error) {
+        commit('SET_ERROR', error.message)
+        throw error
+      } finally {
+        commit('SET_LOADING', false)
+      }
+    },
+
+    // Delete a product
+    async deleteProduct({ commit }, productId) {
+      try {
+        commit('SET_LOADING', true)
+
+        await axios.delete(`${API_BASE}/products/${productId}`)
+        commit('DELETE_PRODUCT', productId)
+
+      } catch (error) {
+        commit('SET_ERROR', error.message)
+        throw error
+      } finally {
+        commit('SET_LOADING', false)
+      }
+    },
+
+    // Login user
+    async loginUser({ commit }, credentials) {
+      try {
+        commit('SET_LOADING', true)
+
+        // Replace with your actual auth endpoint
+        const response = await axios.post(`${API_BASE}/auth/login`, credentials)
+
+        commit('SET_USER', {
+          username: credentials.username,
+          isAdmin: credentials.username === 'admin' // Example logic
+        })
+
+        return response.data
+
+      } catch (error) {
+        commit('SET_ERROR', 'Login failed')
+        throw error
+      } finally {
+        commit('SET_LOADING', false)
+      }
+    },
+
+    // Logout user
+    logoutUser({ commit }) {
+      commit('CLEAR_USER')
+    }
+  }
+})
+
+export default store
+```
+
+### Using the Store in ProductView.vue
+
+```vue
+<template>
+  <div class="product-view">
+    <h1>Product Management</h1>
+
+    <!-- Loading indicator -->
+    <div v-if="isLoading" class="loading">
+      Loading products...
+    </div>
+
+    <!-- Error message -->
+    <div v-if="error" class="error">
+      Error: {{ error }}
+    </div>
+
+    <!-- Product count -->
+    <p>Total Products: {{ productCount }}</p>
+
+    <!-- Add Product Button -->
+    <button @click="showAddModal = true">Add Product</button>
+
+    <!-- Products Table -->
+    <table v-if="!isLoading">
+      <thead>
+        <tr>
+          <th>ID</th>
+          <th>Title</th>
+          <th>Price</th>
+          <th>Category</th>
+          <th>Actions</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr v-for="product in allProducts" :key="product.id">
+          <td>{{ product.id }}</td>
+          <td>{{ product.title }}</td>
+          <td>${{ product.price }}</td>
+          <td>{{ product.category }}</td>
+          <td>
+            <button @click="handleDelete(product.id)">Delete</button>
+          </td>
+        </tr>
+      </tbody>
+    </table>
+
+    <!-- Add Product Modal -->
+    <AddProductModal
+      v-if="showAddModal"
+      @close="showAddModal = false"
+      @add="handleAddProduct"
+    />
+  </div>
+</template>
+
+<script>
+import AddProductModal from '@/components/AddProductModal.vue'
+
+export default {
+  name: 'ProductView',
+  components: {
+    AddProductModal
+  },
+
+  data() {
+    return {
+      showAddModal: false
+    }
+  },
+
+  //─────────────────────────────────────────────────────
+  // COMPUTED - Connect to Vuex getters and state
+  //─────────────────────────────────────────────────────
+  computed: {
+    // Access getters
+    allProducts() {
+      return this.$store.getters.allProducts
+    },
+
+    productCount() {
+      return this.$store.getters.productCount
+    },
+
+    isLoading() {
+      return this.$store.getters.isLoading
+    },
+
+    // Access state directly
+    error() {
+      return this.$store.state.error
+    }
+  },
+
+  //─────────────────────────────────────────────────────
+  // METHODS - Dispatch actions to Vuex
+  //─────────────────────────────────────────────────────
+  methods: {
+    async handleAddProduct(productData) {
+      try {
+        // Dispatch action to add product
+        await this.$store.dispatch('createProduct', productData)
+
+        alert('Product added successfully!')
+        this.showAddModal = false
+
+      } catch (error) {
+        alert('Failed to add product: ' + error.message)
+      }
+    },
+
+    async handleDelete(productId) {
+      if (!confirm('Delete this product?')) return
+
+      try {
+        // Dispatch action to delete product
+        await this.$store.dispatch('deleteProduct', productId)
+
+        alert('Product deleted successfully!')
+
+      } catch (error) {
+        alert('Failed to delete product: ' + error.message)
+      }
+    }
+  },
+
+  //─────────────────────────────────────────────────────
+  // LIFECYCLE - Load data when component mounts
+  //─────────────────────────────────────────────────────
+  mounted() {
+    // Dispatch action to fetch products
+    this.$store.dispatch('fetchProducts')
+  }
+}
+</script>
+```
+
+---
+
+## 🔄 Vuex vs Component State - When to Use Each?
+
+### Use Component State (data()) When
+
+```vue
+<script>
+export default {
+  data() {
+    return {
+      // ✅ Good for component state
+      showModal: false,        // UI toggle
+      searchQuery: '',         // Temporary input
+      currentPage: 1,          // Pagination
+      isHovered: false         // UI interaction
+    }
+  }
+}
+</script>
+```
+
+**Use for:**
+
+- ✅ UI state (modals, toggles, hover states)
+- ✅ Form inputs
+- ✅ Temporary data
+- ✅ Data only one component needs
+
+### Use Vuex State When
+
+```javascript
+// store/index.js
+state() {
+  return {
+    // ✅ Good for global state
+    products: [],         // Shared data
+    user: {},            // Auth state
+    cart: [],            // Shopping cart
+    theme: 'dark'        // App-wide settings
+  }
+}
+```
+
+**Use for:**
+
+- ✅ Data shared by multiple components
+- ✅ Authentication state
+- ✅ API data
+- ✅ Shopping carts, wishlists
+- ✅ App-wide settings
+
+---
+
+## 🎓 Quick Reference Cheat Sheet
+
+### Accessing Vuex in Components
+
+```javascript
+// ┌─────────────────────────────────────────────────────┐
+// │  READ STATE & GETTERS (in computed properties)      │
+// └─────────────────────────────────────────────────────┘
+computed: {
+  // Direct state access
+  products() {
+    return this.$store.state.products
+  },
+
+  // Using getters
+  productCount() {
+    return this.$store.getters.productCount
+  }
+}
+
+// ┌─────────────────────────────────────────────────────┐
+// │  CALL MUTATIONS (synchronous changes)               │
+// └─────────────────────────────────────────────────────┘
+methods: {
+  clearCart() {
+    this.$store.commit('CLEAR_CART')
+  },
+
+  addItem(item) {
+    this.$store.commit('ADD_ITEM', item)
+    //                      ↑        ↑
+    //                   mutation  payload
+  }
+}
+
+// ┌─────────────────────────────────────────────────────┐
+// │  CALL ACTIONS (asynchronous operations)             │
+// └─────────────────────────────────────────────────────┘
+methods: {
+  async loadData() {
+    await this.$store.dispatch('fetchProducts')
+  },
+
+  async addProduct(data) {
+    await this.$store.dispatch('createProduct', data)
+    //                             ↑             ↑
+    //                          action        payload
+  }
+}
+```
+
+### Store Structure Template
+
+```javascript
+import { createStore } from 'vuex'
+
+export default createStore({
+  // 📦 STATE - Your data
+  state() {
+    return {
+      // Add your data here
+    }
+  },
+
+  // 🔍 GETTERS - Computed values
+  getters: {
+    // Add computed properties here
+  },
+
+  // ✏️ MUTATIONS - Sync changes (commit)
+  mutations: {
+    // Add state changes here
+    // USE UPPERCASE_NAMES
+  },
+
+  // ⚡ ACTIONS - Async operations (dispatch)
+  actions: {
+    // Add API calls and complex logic here
+  }
+})
+```
+
+---
+
+## 🚀 Migration Guide: localStorage → Vuex
+
+Let's convert your existing authentication system from localStorage to Vuex!
+
+### Before (localStorage in components)
+
+```vue
+<!-- LoginView.vue - OLD WAY -->
+<script>
+export default {
+  data() {
+    return {
+      username: '',
+      password: ''
+    }
+  },
+
+  methods: {
+    async handleLogin() {
+      const response = await loginUser(this.username, this.password)
+
+      if (response.status === 201) {
+        // ❌ Setting localStorage directly in component
+        localStorage.setItem('isAuthenticated', 'true')
+        localStorage.setItem('username', this.username)
+
+        this.$router.push('/profile')
+      }
+    }
+  }
+}
+</script>
+```
+
+### After (Vuex centralized state)
+
+```javascript
+// store/index.js - NEW WAY
+import { createStore } from 'vuex'
+import { loginUser } from '@/api/authApi'
+
+export default createStore({
+  state() {
+    return {
+      user: {
+        username: localStorage.getItem('username') || '',
+        isAuthenticated: localStorage.getItem('isAuthenticated') === 'true'
+      }
+    }
+  },
+
+  getters: {
+    isAuthenticated(state) {
+      return state.user.isAuthenticated
+    },
+    username(state) {
+      return state.user.username
+    }
+  },
+
+  mutations: {
+    SET_USER(state, username) {
+      state.user.username = username
+      state.user.isAuthenticated = true
+      localStorage.setItem('username', username)
+      localStorage.setItem('isAuthenticated', 'true')
+    },
+
+    CLEAR_USER(state) {
+      state.user.username = ''
+      state.user.isAuthenticated = false
+      localStorage.removeItem('username')
+      localStorage.removeItem('isAuthenticated')
+    }
+  },
+
+  actions: {
+    async login({ commit }, { username, password }) {
+      const response = await loginUser(username, password)
+
+      if (response.status === 201) {
+        commit('SET_USER', username)
+        return true
+      }
+      return false
+    },
+
+    logout({ commit }) {
+      commit('CLEAR_USER')
+    }
+  }
+})
+```
+
+```vue
+<!-- LoginView.vue - NEW WAY -->
+<script>
+export default {
+  data() {
+    return {
+      username: '',
+      password: ''
+    }
+  },
+
+  methods: {
+    async handleLogin() {
+      try {
+        // ✅ Use Vuex action
+        const success = await this.$store.dispatch('login', {
+          username: this.username,
+          password: this.password
+        })
+
+        if (success) {
+          this.$router.push('/profile')
+        } else {
+          alert('Login failed')
+        }
+      } catch (error) {
+        alert('Login error: ' + error.message)
+      }
+    }
+  }
+}
+</script>
+```
+
+```vue
+<!-- App.vue - NEW WAY -->
+<script>
+export default {
+  computed: {
+    // ✅ Use Vuex getter instead of reading localStorage
+    isAuthenticated() {
+      return this.$store.getters.isAuthenticated
+    }
+  }
+}
+</script>
+
+<template>
+  <nav>
+    <RouterLink to="/">Home</RouterLink>
+    <RouterLink to="/about">About</RouterLink>
+
+    <!-- Show if authenticated -->
+    <RouterLink v-if="isAuthenticated" to="/products">
+      Products
+    </RouterLink>
+    <RouterLink v-if="isAuthenticated" to="/profile">
+      Profile
+    </RouterLink>
+  </nav>
+</template>
+```
+
+---
+
+## 📊 Comparison: Before vs After Vuex
+
+| Aspect | Without Vuex | With Vuex |
+|--------|-------------|-----------|
+| **Data Location** | Scattered across components | Centralized in store |
+| **Complexity** | Props & events everywhere | Clean access pattern |
+| **API Calls** | Repeated in many components | Once in actions |
+| **Debugging** | Hard to track data changes | Vue DevTools shows all changes |
+| **Testing** | Need to mock many things | Test store independently |
+| **Code Reuse** | Copy-paste logic | Reuse actions/getters |
+
+---
+
+## 🎯 Practice Exercises
+
+### Exercise 1: Basic Setup
+
+1. Install Vuex in your project
+2. Create a store with a products array
+3. Add a getter to count products
+4. Display the count in a component
+
+### Exercise 2: Add CRUD Actions
+
+1. Create actions for: fetchProducts, createProduct, updateProduct, deleteProduct
+2. Add corresponding mutations
+3. Use these actions in your ProductView component
+
+### Exercise 3: User Authentication
+
+1. Move your localStorage auth logic to Vuex
+2. Create login and logout actions
+3. Update all components to use Vuex instead of localStorage directly
+
+### Exercise 4: Loading States
+
+1. Add loading state to store
+2. Show loading indicator during API calls
+3. Handle and display errors from API
+
+---
+
+## 🎓 Summary
+
+**Remember the Vuex Flow:**
+
+1. **Component** needs data → access `$store.state` or `$store.getters`
+2. **Component** needs to change data → `dispatch` an **action**
+3. **Action** does async work (API call) → `commit` a **mutation**
+4. **Mutation** changes the **state**
+5. **State** changes → Vue automatically updates **components**!
+
+**Key Rules:**
+
+- ✅ State = single source of truth
+- ✅ Getters = computed properties for state
+- ✅ Mutations = ONLY way to change state (synchronous)
+- ✅ Actions = async operations (use mutations to change state)
+- ✅ Never modify state directly!
+
+Now you're ready to build scalable Vue applications with Vuex! 🎉
